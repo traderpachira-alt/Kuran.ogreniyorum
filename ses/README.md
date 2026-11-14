@@ -1,19 +1,28 @@
-# Kayıtlı harf sesleri (isteğe bağlı)
+# Uygulamayla gelen harf sesleri
 
-Bu klasöre bir hocanın ya da sizin sesinizle kaydedilmiş harf sesleri koyarsanız uygulama
-cihazın yapay sesi yerine **bu kayıtları** çalar. Kaydı olmayan harfler için yapay ses kullanılmaya devam eder.
+Bu klasördeki kayıtlar uygulamayı açan **herkese** çalınır (bir hocanın sesi gibi).
+Kaydı olmayan harflerde cihazın yapay sesi kullanılır. Ebeveynin kendi cihazında yaptığı kayıtlar
+bunların da önüne geçer.
 
-Dosya adları (mp3):
+Hangi dosyanın hangi harf olduğu `sesler.json` içinde yazar (`"0"` = Elif … `"27"` = Ye).
+Bu dosyaları elle değil, `tools/sesleri-ekle.py` ile ekleyin; araç sessizliği kırpar,
+ses seviyesini eşitler ve her cihazda çalan `.m4a` biçimine çevirir.
 
-| Dosya | Harf | Dosya | Harf | Dosya | Harf | Dosya | Harf |
-|---|---|---|---|---|---|---|---|
-| 01.mp3 | ا Elif | 08.mp3 | د Dal | 15.mp3 | ض Dad | 22.mp3 | ك Kef |
-| 02.mp3 | ب Be | 09.mp3 | ذ Zel | 16.mp3 | ط Tı | 23.mp3 | ل Lam |
-| 03.mp3 | ت Te | 10.mp3 | ر Ra | 17.mp3 | ظ Zı | 24.mp3 | م Mim |
-| 04.mp3 | ث Se | 11.mp3 | ز Ze | 18.mp3 | ع Ayn | 25.mp3 | ن Nun |
-| 05.mp3 | ج Cim | 12.mp3 | س Sin | 19.mp3 | غ Ğayn | 26.mp3 | و Vav |
-| 06.mp3 | ح Ha | 13.mp3 | ش Şın | 20.mp3 | ف Fe | 27.mp3 | ه He |
-| 07.mp3 | خ Hı | 14.mp3 | ص Sad | 21.mp3 | ق Kaf | 28.mp3 | ي Ye |
+## Hocadan ses almanın üç yolu
 
-İpuçları: Her dosyada yalnızca harfin adı olsun (1–2 saniye), başta ve sonda uzun sessizlik bırakmayın.
-Telefonun ses kaydedicisiyle kaydedip mp3'e çevirmek yeterlidir.
+1. **Uygulamadan yedek (önerilen):** Hoca uygulamayı açar → Anne-Baba → *Harf seslerini kaydet*.
+   Harfleri kaydeder (🎙️ ya da telefonun ses kaydedicisi + 📁), sonra **📤 Yedek al** ile
+   `kuran-ogreniyorum-sesler-....json` dosyasını alıp size gönderir.
+
+       python3 tools/sesleri-ekle.py kuran-ogreniyorum-sesler-2026-11-14.json
+
+2. **Tek kayıt:** Hoca 28 harfi Elif'ten Ye'ye sırayla, her harften sonra yaklaşık 1 saniye
+   durarak tek seferde okur (WhatsApp sesli mesajı da olur). Araç kaydı sessizliklerden böler.
+
+       python3 tools/sesleri-ekle.py --tek-kayit elifba.m4a
+
+3. **Ayrı dosyalar:** `01.m4a` (Elif), `02.m4a` (Be) … `28.m4a` (Ye) adlı dosyaların olduğu bir klasör.
+
+       python3 tools/sesleri-ekle.py kayitlar/
+
+Sonra değişiklikleri depoya gönderip uygulamayı yeniden yayınlayın.

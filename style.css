@@ -280,6 +280,9 @@ main { flex: 1; position: relative; min-height: 0; }
 .rec-btn.armed { background: var(--bad); color: #fff; font-size: .8rem; font-weight: 800; }
 .rec-alert { background: #fff4e6; color: #a34700; border-radius: 14px; padding: 10px 12px; }
 
+.rec-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.rec-alert.ok { background: #ebfbee; color: #2b8a3e; }
+
 /* ---------- Pencereler ---------- */
 .overlay {
   position: fixed; inset: 0; background: rgba(24, 100, 171, .45); z-index: 20;

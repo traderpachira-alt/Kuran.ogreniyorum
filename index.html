@@ -131,8 +131,16 @@
       <p class="note rec-alert" id="recMicNote" hidden>Bu ekranda mikrofon kullanılamıyor. Telefonunuzun <b>ses kaydedici</b> uygulamasıyla harfi kaydedin, sonra o harfin 📁 düğmesiyle dosyayı seçin.</p>
       <p class="note rec-alert" id="recWarn" hidden>Kayıt bu cihazda kalıcı olarak saklanamadı (gizli sekme olabilir). Sayfa kapanınca silinecek.</p>
       <div class="rec-list" id="recList"></div>
+      <h2>Yedekleme</h2>
+      <p class="note">Kayıtları tek bir dosya olarak alın. Bu dosyayla kayıtları başka bir cihaza taşıyabilir ya da uygulamaya kalıcı olarak eklenmesi için gönderebilirsiniz.</p>
+      <div class="rec-actions">
+        <button class="pill" id="recExport">📤 Yedek al</button>
+        <button class="pill" id="recImport">📥 Yedekten yükle</button>
+      </div>
+      <p class="note rec-alert" id="recInfo" hidden></p>
     </div>
     <input type="file" id="recFile" accept="audio/*" hidden>
+    <input type="file" id="recImportFile" accept=".json,application/json" hidden>
   </section>
 
   <!-- EBEVEYN -->

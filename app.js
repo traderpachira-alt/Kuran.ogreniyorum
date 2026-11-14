@@ -39,7 +39,7 @@ const LETTERS = [
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '4 (14.11.2026)';
+const VERSION = '5 (14.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -114,10 +114,12 @@ function speak(text, lang = 'tr', rate) {
 let clip = null;
 const recUrls = {};               // harf no -> oynatılabilir adres (bellekte hazır, anında çalsın)
 const missingClip = new Set();
-let clipsReady = false;           // ses/ klasörü var mı? açılışta bir kez kontrol edilir
-if (location.protocol.startsWith('http')) {
-  fetch('ses/01.mp3', { method: 'HEAD' }).then(r => { clipsReady = r.ok; }).catch(() => {});
-}
+// ses/sesler.json: uygulamayla gelen kayıtların listesi, ör. {"0": "01.m4a", "1": "02.m4a"}
+let appClips = {};
+fetch('ses/sesler.json').then(r => (r.ok ? r.json() : {})).then(j => {
+  appClips = j || {};
+  if (current === 'record') renderRecList();
+}).catch(() => {});
 
 // Küçük IndexedDB yardımcısı: { buf: ArrayBuffer, type } olarak saklar (Safari'de de güvenli).
 const recStore = (() => {
@@ -161,8 +163,8 @@ function playUrl(url) {
   });
 }
 function playClip(i) {
-  if (!clipsReady || missingClip.has(i)) return Promise.reject();
-  return playUrl(`ses/${String(i + 1).padStart(2, '0')}.mp3`).catch(() => { missingClip.add(i); throw 0; });
+  if (!appClips[i] || missingClip.has(i)) return Promise.reject();
+  return playUrl('ses/' + appClips[i]).catch(() => { missingClip.add(i); throw 0; });
 }
 function hush() {
   try { speechSynthesis.cancel(); } catch (e) { /* yoksay */ }
@@ -607,7 +609,7 @@ function renderRecList() {
     row.style.setProperty('--c', colorOf(i));
     row.innerHTML = `
       <span class="rec-ch">${L.c}</span>
-      <span class="rec-nm">${L.tr}<small>${busy ? 'Kaydediliyor… bitince ⏹' : has ? '✔ Kayıtlı' : 'Yapay ses'}</small></span>
+      <span class="rec-nm">${L.tr}<small>${busy ? 'Kaydediliyor… bitince ⏹' : has ? '✔ Kayıtlı' : appClips[i] ? 'Uygulama sesi' : 'Yapay ses'}</small></span>
       ${micOk ? `<button class="rec-btn mic" aria-label="${L.tr} harfini kaydet">${busy ? '⏹' : '🎙️'}</button>` : ''}
       <button class="rec-btn file" aria-label="${L.tr} için ses dosyası seç">📁</button>
       <button class="rec-btn play" aria-label="${L.tr} harfini dinle">▶</button>
@@ -683,6 +685,69 @@ $('recFile').onchange = async e => {
   hush(); sayLetter(recIdx);
 };
 $('recOpen').onclick = openRecord;
+
+// ---------- Yedek al / yedekten yükle ----------
+// Yedek dosyası: { app, version, created, recordings: { "0": { type, data(base64) }, ... } }
+function bufToB64(buf) {
+  const bytes = new Uint8Array(buf); let bin = '';
+  for (let k = 0; k < bytes.length; k += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(k, k + 0x8000));
+  return btoa(bin);
+}
+function b64ToBuf(b64) {
+  const bin = atob(b64), out = new Uint8Array(bin.length);
+  for (let k = 0; k < bin.length; k++) out[k] = bin.charCodeAt(k);
+  return out.buffer;
+}
+function recNote(text, ok) {
+  const el = $('recInfo'); el.textContent = text; el.hidden = false;
+  el.classList.toggle('ok', !!ok);
+}
+async function exportRecs() {
+  const keys = Object.keys(recUrls);
+  if (!keys.length) return recNote('Henüz kayıtlı harf yok. Önce birkaç harf kaydedin.');
+  const recordings = {};
+  for (const k of keys) {
+    const blob = await (await fetch(recUrls[k])).blob();
+    recordings[k] = { type: blob.type || 'audio/mpeg', data: bufToB64(await blob.arrayBuffer()) };
+  }
+  const json = JSON.stringify({ app: 'kuran-ogreniyorum', version: 1, created: new Date().toISOString(), recordings });
+  const filename = `kuran-ogreniyorum-sesler-${new Date().toISOString().slice(0, 10)}.json`;
+  const blob = new Blob([json], { type: 'application/json' });
+  // claude.ai sayfasında indirme izni üzerinden, kendi sitenizde normal indirme ile
+  let dl = null;
+  try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { dl = null; }
+  if (dl) {
+    try { await dl.save({ filename, data: blob }); recNote(`${keys.length} harfin yedeği kaydedildi: ${filename}`, true); }
+    catch (e) { if (e && e.code !== 'declined') recNote('Yedek dosyası kaydedilemedi. Lütfen tekrar deneyin.'); }
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  recNote(`${keys.length} harfin yedeği indirildi: ${filename}`, true);
+}
+$('recExport').onclick = exportRecs;
+$('recImport').onclick = () => { $('recImportFile').value = ''; $('recImportFile').click(); };
+$('recImportFile').onchange = async e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (j.app !== 'kuran-ogreniyorum' || !j.recordings) throw new Error('format');
+    let n = 0;
+    for (const [k, v] of Object.entries(j.recordings)) {
+      const i = +k;
+      if (!(i >= 0 && i < LETTERS.length) || !v.data) continue;
+      await saveRec(i, new Blob([b64ToBuf(v.data)], { type: v.type || 'audio/mpeg' }));
+      n++;
+    }
+    renderRecList();
+    recNote(`${n} harfin sesi yedekten yüklendi.`, true);
+  } catch (err) {
+    recNote('Bu dosya bir Kur\'an Öğreniyorum ses yedeği değil.');
+  }
+};
 
 // ---------- Ebeveyn alanı ----------
 function openGate() {
