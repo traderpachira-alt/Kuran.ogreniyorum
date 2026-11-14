@@ -34,9 +34,17 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 
 ## Ses
 
-- Harfler cihazın **metin okuma (TTS)** motoruyla okunur. Cihazda **Arapça ses** varsa harf adları Arapça (أَلِف، بَاء …) okunur, yoksa Türkçe isimleri (Elif, Be …) okunur. Ayar, Anne-Baba bölümünden değiştirilebilir.
-- Oyun sesleri (doğru, yanlış, balon patlaması) Web Audio ile üretilir; ses dosyası gerekmez.
-- İleride kayıtlı, gerçek bir hocanın sesiyle (mp3) değiştirmek için `app.js` içindeki `sayLetter` fonksiyonunu güncellemek yeterlidir.
+Harf okunurken sırasıyla şunlar denenir:
+
+1. **Kayıtlı ses:** `ses/01.mp3` … `ses/28.mp3` varsa onlar çalınır (ayrıntı: [`ses/README.md`](ses/README.md)). En doğal ve doğru sonuç budur.
+2. **Cihazın Arapça sesi:** Harf adları uzatılarak ve hemzesiz yazılır (بَا، تَا، ثَا …), böylece ses sonda aniden kesilmez. Varsayılan hız "Yavaş ve uzun"dur; Anne-Baba bölümünden değiştirilebilir. Cihazdaki daha doğal sesler (Google, Enhanced vb.) tercih edilir.
+3. **Türkçe isim:** Cihazda Arapça ses yoksa Elif, Be, Te … okunur.
+
+Oyun sesleri (doğru, yanlış, balon patlaması) Web Audio ile üretilir; ses dosyası gerekmez.
+
+## Paylaşılabilir tek dosya
+
+`python3 tools/tek-dosya.py çıktı.html` komutu üç dosyayı tek bir sayfada birleştirir. claude.ai bağlantısı olarak yayınlanan sürüm budur.
 
 ## Dosyalar
 
@@ -44,6 +52,8 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 - `style.css` — görünüm
 - `app.js` — harf verisi, oyunlar, ilerleme kaydı (tarayıcının yerel depolaması)
 - `sw.js`, `manifest.json`, `icon.svg` — çevrimdışı çalışma ve ana ekrana ekleme
+- `ses/` — isteğe bağlı kayıtlı harf sesleri
+- `tools/tek-dosya.py` — paylaşılabilir tek sayfa üretir
 
 ## Gelecek fikirleri
 

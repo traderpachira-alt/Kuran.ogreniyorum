@@ -7,33 +7,33 @@
 // ---------- Veri: 28 harf ----------
 const LETTERS = [
   { c: 'ا', tr: 'Elif', ar: 'أَلِف',  hint: 'Dimdik bir çubuk' },
-  { c: 'ب', tr: 'Be',   ar: 'بَاء',   hint: 'Gemi gibi, altında 1 nokta' },
-  { c: 'ت', tr: 'Te',   ar: 'تَاء',   hint: 'Üstünde 2 nokta' },
-  { c: 'ث', tr: 'Se',   ar: 'ثَاء',   hint: 'Üstünde 3 nokta' },
+  { c: 'ب', tr: 'Be',   ar: 'بَا',   hint: 'Gemi gibi, altında 1 nokta' },
+  { c: 'ت', tr: 'Te',   ar: 'تَا',   hint: 'Üstünde 2 nokta' },
+  { c: 'ث', tr: 'Se',   ar: 'ثَا',   hint: 'Üstünde 3 nokta' },
   { c: 'ج', tr: 'Cim',  ar: 'جِيم',   hint: 'Karnında 1 nokta' },
-  { c: 'ح', tr: 'Ha',   ar: 'حَاء',   hint: 'Cim gibi ama noktasız' },
-  { c: 'خ', tr: 'Hı',   ar: 'خَاء',   hint: 'Başında 1 nokta' },
+  { c: 'ح', tr: 'Ha',   ar: 'حَا',   hint: 'Cim gibi ama noktasız' },
+  { c: 'خ', tr: 'Hı',   ar: 'خَا',   hint: 'Başında 1 nokta' },
   { c: 'د', tr: 'Dal',  ar: 'دَال',   hint: 'Küçük bir köşe, noktasız' },
   { c: 'ذ', tr: 'Zel',  ar: 'ذَال',   hint: 'Dal gibi, üstünde 1 nokta' },
-  { c: 'ر', tr: 'Ra',   ar: 'رَاء',   hint: 'Kaydırak gibi, noktasız' },
+  { c: 'ر', tr: 'Ra',   ar: 'رَا',   hint: 'Kaydırak gibi, noktasız' },
   { c: 'ز', tr: 'Ze',   ar: 'زَاي',   hint: 'Ra gibi, üstünde 1 nokta' },
   { c: 'س', tr: 'Sin',  ar: 'سِين',   hint: 'Üç küçük diş' },
   { c: 'ش', tr: 'Şın',  ar: 'شِين',   hint: 'Dişlerin üstünde 3 nokta' },
   { c: 'ص', tr: 'Sad',  ar: 'صَاد',   hint: 'Yumurta gibi, noktasız' },
   { c: 'ض', tr: 'Dad',  ar: 'ضَاد',   hint: 'Sad gibi, üstünde 1 nokta' },
-  { c: 'ط', tr: 'Tı',   ar: 'طَاء',   hint: 'Bayrak direği gibi' },
-  { c: 'ظ', tr: 'Zı',   ar: 'ظَاء',   hint: 'Tı gibi, üstünde 1 nokta' },
+  { c: 'ط', tr: 'Tı',   ar: 'طَا',   hint: 'Bayrak direği gibi' },
+  { c: 'ظ', tr: 'Zı',   ar: 'ظَا',   hint: 'Tı gibi, üstünde 1 nokta' },
   { c: 'ع', tr: 'Ayn',  ar: 'عَيْن',  hint: 'Açık ağız gibi, noktasız' },
   { c: 'غ', tr: 'Ğayn', ar: 'غَيْن',  hint: 'Ayn gibi, üstünde 1 nokta' },
-  { c: 'ف', tr: 'Fe',   ar: 'فَاء',   hint: 'Üstünde 1 nokta' },
+  { c: 'ف', tr: 'Fe',   ar: 'فَا',   hint: 'Üstünde 1 nokta' },
   { c: 'ق', tr: 'Kaf',  ar: 'قَاف',   hint: 'Üstünde 2 nokta, derin çanak' },
   { c: 'ك', tr: 'Kef',  ar: 'كَاف',   hint: 'İçinde küçük bir işaret' },
   { c: 'ل', tr: 'Lam',  ar: 'لَام',   hint: 'Uzun boylu, aşağı kıvrık' },
   { c: 'م', tr: 'Mim',  ar: 'مِيم',   hint: 'Yuvarlak bir başı var' },
   { c: 'ن', tr: 'Nun',  ar: 'نُون',   hint: 'Kâse gibi, üstünde 1 nokta' },
   { c: 'و', tr: 'Vav',  ar: 'وَاو',   hint: 'Küçük başlı, aşağı kıvrık' },
-  { c: 'ه', tr: 'He',   ar: 'هَاء',   hint: 'Yuvarlacık' },
-  { c: 'ي', tr: 'Ye',   ar: 'يَاء',   hint: 'Altında 2 nokta' },
+  { c: 'ه', tr: 'He',   ar: 'هَا',   hint: 'Yuvarlacık' },
+  { c: 'ي', tr: 'Ye',   ar: 'يَا',   hint: 'Altında 2 nokta' },
 ];
 
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
@@ -50,7 +50,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 // ---------- Kayıt ----------
 const KEY = 'kuran-ogreniyorum-v1';
-const DEFAULTS = { stars: 0, seen: [], score: {}, settings: { sfx: true, voice: 'ar', pool: 'auto' } };
+const DEFAULTS = { stars: 0, seen: [], score: {}, settings: { sfx: true, voice: 'ar', pool: 'auto', speed: 'slow' } };
 let S = load();
 function load() {
   try {
@@ -78,31 +78,62 @@ function pool() {
 }
 
 // ---------- Ses: konuşma ----------
+// Öncelik: 1) ses/NN.mp3 kaydı varsa onu çal  2) cihazın Arapça sesi  3) Türkçe isim.
 let voices = [];
 function loadVoices() { try { voices = speechSynthesis.getVoices(); } catch (e) { voices = []; } }
 if ('speechSynthesis' in window) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-const voiceFor = lang => voices.find(v => v.lang.replace('_', '-').toLowerCase().startsWith(lang));
+// Aynı dildeki sesler arasında daha doğal olanları (Google, Enhanced, Neural…) tercih et.
+const GOOD_VOICE = /google|enhanced|premium|natural|neural|siri|online/i;
+function voiceFor(lang) {
+  const list = voices.filter(v => v.lang.replace('_', '-').toLowerCase().startsWith(lang));
+  return list.find(v => GOOD_VOICE.test(v.name)) || list[0];
+}
 const hasArabic = () => !!voiceFor('ar');
+const RATES = { slow: { ar: 0.55, tr: 0.75 }, normal: { ar: 0.8, tr: 0.95 } };
 
-function speak(text, lang = 'tr') {
+function speak(text, lang = 'tr', rate) {
   return new Promise(resolve => {
     if (!('speechSynthesis' in window)) return resolve();
     const u = new SpeechSynthesisUtterance(text);
     const v = voiceFor(lang);
     if (v) u.voice = v;
-    u.lang = lang === 'ar' ? 'ar-SA' : 'tr-TR';
-    u.rate = lang === 'ar' ? 0.75 : 0.95;
-    u.pitch = 1.15;
+    u.lang = v ? v.lang : (lang === 'ar' ? 'ar-SA' : 'tr-TR');
+    u.rate = rate || (lang === 'ar' ? 0.8 : 0.95);
+    u.pitch = lang === 'ar' ? 1 : 1.15;
     let done = false; const fin = () => { if (!done) { done = true; resolve(); } };
     u.onend = fin; u.onerror = fin;
-    setTimeout(fin, 3500);
+    setTimeout(fin, 6000);
     speechSynthesis.speak(u);
   });
 }
-function hush() { try { speechSynthesis.cancel(); } catch (e) { /* yoksay */ } }
+
+// Kayıtlı sesler (isteğe bağlı): ses/01.mp3 = Elif, ses/02.mp3 = Be … ses/28.mp3 = Ye
+let clip = null;
+const missingClip = new Set();
+// Kayıt klasörü yoksa her dokunuşta boşuna denemeyelim: açılışta bir kez kontrol et.
+let clipsReady = false;
+if (location.protocol.startsWith('http')) {
+  fetch('ses/01.mp3', { method: 'HEAD' }).then(r => { clipsReady = r.ok; }).catch(() => {});
+}
+function playClip(i) {
+  return new Promise((resolve, reject) => {
+    if (!clipsReady || missingClip.has(i)) return reject();
+    const a = new Audio(`ses/${String(i + 1).padStart(2, '0')}.mp3`);
+    clip = a;
+    a.onended = () => resolve();
+    a.onerror = () => { missingClip.add(i); reject(); };
+    a.play().catch(err => { if (err && err.name === 'NotAllowedError') resolve(); else { missingClip.add(i); reject(); } });
+  });
+}
+function hush() {
+  try { speechSynthesis.cancel(); } catch (e) { /* yoksay */ }
+  if (clip) { clip.pause(); clip = null; }
+}
 function sayLetter(i) {
-  const L = LETTERS[i];
-  return (S.settings.voice === 'ar' && hasArabic()) ? speak(L.ar, 'ar') : speak(L.tr, 'tr');
+  const L = LETTERS[i], r = RATES[S.settings.speed] || RATES.slow;
+  const tts = () => (S.settings.voice === 'ar' && hasArabic()) ? speak(L.ar, 'ar', r.ar) : speak(L.tr, 'tr', r.tr);
+  if (S.settings.voice === 'tr') return tts();
+  return playClip(i).catch(tts);
 }
 function praise() { const p = rand(PRAISE); speak(p, 'tr'); return p; }
 
@@ -510,6 +541,7 @@ function openParent() {
   $('optSfx').checked = S.settings.sfx;
   $('optVoice').value = S.settings.voice;
   $('optPool').value = S.settings.pool;
+  $('optSpeed').value = S.settings.speed;
   $('voiceNote').textContent = hasArabic()
     ? 'Bu cihazda Arapça ses bulundu. Harfler Arapça okunur.'
     : 'Bu cihazda Arapça ses bulunamadı; harf isimleri Türkçe okunur. Cihaz ayarlarından (Metin okuma / Konuşma) Arapça ses paketi yükleyebilirsiniz.';
@@ -517,6 +549,7 @@ function openParent() {
 $('optSfx').onchange = e => { S.settings.sfx = e.target.checked; save(); };
 $('optVoice').onchange = e => { S.settings.voice = e.target.value; save(); };
 $('optPool').onchange = e => { S.settings.pool = e.target.value; save(); };
+$('optSpeed').onchange = e => { S.settings.speed = e.target.value; save(); sayLetter(1); };
 let resetArmed = false;
 $('resetBtn').onclick = () => {
   const btn = $('resetBtn');
