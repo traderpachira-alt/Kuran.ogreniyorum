@@ -1,0 +1,15 @@
+{
+  "name": "Kur'an Öğreniyorum",
+  "short_name": "Kur'an Öğren",
+  "description": "4-6 yaş çocuklar için Arapça harfleri oyunlarla öğreten uygulama.",
+  "lang": "tr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#e7f5ff",
+  "theme_color": "#4dabf7",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

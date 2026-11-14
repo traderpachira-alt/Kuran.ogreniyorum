@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#4dabf7">
+<meta name="description" content="4-6 yaş çocuklar için Arapça harfleri oyunlarla öğreten uygulama.">
+<title>Kur'an Öğreniyorum</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Naskh+Arabic:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Üst çubuk -->
+<header class="topbar">
+  <button class="round-btn" id="homeBtn" aria-label="Ana sayfa" hidden>🏠</button>
+  <h1 id="title">Kur'an Öğreniyorum</h1>
+  <div class="star-count" id="starCount" aria-label="Yıldızlar"><span>⭐</span><b id="starNum">0</b></div>
+</header>
+
+<main>
+  <!-- ANA SAYFA -->
+  <section class="screen active" id="home">
+    <div class="hero">
+      <button class="mascot" id="mascot" aria-label="Hilal ile konuş">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="50" fill="#fff3bf"/>
+          <path d="M78 20a44 44 0 1 0 0 80a36 36 0 1 1 0-80z" fill="#ffd43b" stroke="#f59f00" stroke-width="3"/>
+          <circle cx="40" cy="55" r="5" fill="#343a40"/>
+          <circle cx="42" cy="53" r="1.6" fill="#fff"/>
+          <path d="M34 72q8 9 18 2" fill="none" stroke="#343a40" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="30" cy="66" r="5" fill="#ffa8a8" opacity=".7"/>
+          <path d="M92 40l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#ffd43b" stroke="#f59f00" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="bubble" id="bubble">Selam! Ben <b>Hilal</b>.<br>Hadi harfleri öğrenelim!</div>
+    </div>
+
+    <div class="tiles">
+      <button class="tile t1" data-go="learn"><span class="emo">📖</span><span>Harfleri Tanı</span></button>
+      <button class="tile t2" data-go="find"><span class="emo">👂</span><span>Dinle ve Bul</span></button>
+      <button class="tile t3" data-go="trace"><span class="emo">✏️</span><span>Harf Çiz</span></button>
+      <button class="tile t4" data-go="balloon"><span class="emo">🎈</span><span>Balon Patlat</span></button>
+      <button class="tile t5" data-go="memory"><span class="emo">🧩</span><span>Hafıza Kartları</span></button>
+      <button class="tile t6" data-go="garden"><span class="emo">🌷</span><span>Harf Bahçem</span></button>
+    </div>
+
+    <button class="parent-link" id="parentBtn">🔒 Anne-Baba</button>
+  </section>
+
+  <!-- HARFLERİ TANI -->
+  <section class="screen" id="learn">
+    <div class="learn-wrap">
+      <button class="arrow" id="prevL" aria-label="Önceki harf">◀</button>
+      <button class="letter-card" id="lCard" aria-label="Harfi dinle">
+        <span class="big-letter" id="lChar">ا</span>
+        <span class="l-name" id="lName">Elif</span>
+        <span class="l-hint" id="lHint"></span>
+        <span class="tap-hint">🔊 Dokun, dinle</span>
+      </button>
+      <button class="arrow" id="nextL" aria-label="Sonraki harf">▶</button>
+    </div>
+    <div class="learn-foot">
+      <span class="counter" id="lCount">1 / 28</span>
+      <button class="pill" id="lTrace">✏️ Bu harfi çiz</button>
+    </div>
+  </section>
+
+  <!-- DİNLE VE BUL -->
+  <section class="screen" id="find">
+    <div class="dots" id="fDots"></div>
+    <button class="speaker" id="fSpeak" aria-label="Tekrar dinle">🔊</button>
+    <p class="ask">Hangi harfi duydun?</p>
+    <div class="options" id="fOpts"></div>
+  </section>
+
+  <!-- HARF ÇİZ -->
+  <section class="screen" id="trace">
+    <div class="trace-top">
+      <button class="round-btn" id="tSpeak" aria-label="Dinle">🔊</button>
+      <span class="trace-name" id="tName">Elif</span>
+      <button class="round-btn" id="tClear" aria-label="Sil">🧽</button>
+      <button class="round-btn" id="tNext" aria-label="Sonraki">▶</button>
+    </div>
+    <div class="trace-box" id="tBox">
+      <canvas id="tGuide"></canvas>
+      <canvas id="tDraw"></canvas>
+    </div>
+    <p class="ask small">Parmağınla harfin üstünden geç!</p>
+  </section>
+
+  <!-- BALON PATLAT -->
+  <section class="screen" id="balloon">
+    <div class="b-top">
+      <span>Bu harfi patlat:</span>
+      <button class="b-target" id="bTarget">ب</button>
+      <div class="dots" id="bDots"></div>
+    </div>
+    <div class="sky" id="sky"></div>
+  </section>
+
+  <!-- HAFIZA -->
+  <section class="screen" id="memory">
+    <p class="ask">Aynı harfleri eşleştir!</p>
+    <div class="cards" id="mGrid"></div>
+  </section>
+
+  <!-- HARF BAHÇEM -->
+  <section class="screen" id="garden">
+    <p class="ask small">Bir harfe dokun. Çiçek açan harfleri iyi biliyorsun! 🌸</p>
+    <div class="garden" id="gGrid"></div>
+  </section>
+
+  <!-- EBEVEYN -->
+  <section class="screen" id="parent">
+    <div class="panel">
+      <h2>İlerleme</h2>
+      <div class="stats" id="pStats"></div>
+      <h2>Ayarlar</h2>
+      <label class="row"><span>Ses efektleri</span><input type="checkbox" id="optSfx"></label>
+      <label class="row"><span>Harf okunuşu</span>
+        <select id="optVoice"><option value="ar">Arapça ses (varsa)</option><option value="tr">Türkçe isim</option></select>
+      </label>
+      <label class="row"><span>Oyunlardaki harfler</span>
+        <select id="optPool"><option value="auto">Öğrendiği harfler</option><option value="all">Tüm 28 harf</option></select>
+      </label>
+      <p class="note" id="voiceNote"></p>
+      <button class="pill danger" id="resetBtn">İlerlemeyi sıfırla</button>
+      <h2>Ebeveynler için ipuçları</h2>
+      <ul class="tips">
+        <li>Günde 10–15 dakika yeterlidir; kısa ve keyifli tutun.</li>
+        <li>Önce <b>Harfleri Tanı</b> bölümünde birkaç harfe birlikte bakın, sonra oyunlara geçin. Oyunlar çocuğun gördüğü harflerle oynanır.</li>
+        <li>Harfleri birlikte, yüksek sesle söyleyin. Noktaların yerine ve sayısına dikkat çekin.</li>
+        <li>Yanlış cevapta ceza yoktur; çocuğun tekrar denemesini cesaretlendirin.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<!-- Ebeveyn kapısı -->
+<div class="overlay" id="gate" hidden>
+  <div class="modal">
+    <p>Ebeveyn alanı</p>
+    <p class="q" id="gateQ"></p>
+    <div class="gate-opts" id="gateOpts"></div>
+    <button class="pill" id="gateClose">Vazgeç</button>
+  </div>
+</div>
+
+<!-- Ödül -->
+<div class="overlay" id="reward" hidden>
+  <div class="modal reward">
+    <div class="big-stars">⭐⭐⭐</div>
+    <p class="r-title" id="rTitle">Harika!</p>
+    <div class="r-btns">
+      <button class="pill big" id="rAgain">🔁 Tekrar</button>
+      <button class="pill big" id="rHome">🏠</button>
+    </div>
+  </div>
+</div>
+
+<div id="fx" aria-hidden="true"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
