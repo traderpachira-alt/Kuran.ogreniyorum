@@ -39,7 +39,7 @@ const LETTERS = [
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '3 (14.11.2026)';
+const VERSION = '4 (14.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -108,23 +108,61 @@ function speak(text, lang = 'tr', rate) {
   });
 }
 
-// Kayıtlı sesler (isteğe bağlı): ses/01.mp3 = Elif, ses/02.mp3 = Be … ses/28.mp3 = Ye
+// ---------- Kayıtlı sesler ----------
+// 1) Ebeveynin uygulama içinde kaydettiği sesler (bu cihazda, IndexedDB'de kalıcı)
+// 2) ses/01.mp3 … ses/28.mp3 dosyaları (uygulamayla birlikte yayınlanan kayıtlar)
 let clip = null;
+const recUrls = {};               // harf no -> oynatılabilir adres (bellekte hazır, anında çalsın)
 const missingClip = new Set();
-// Kayıt klasörü yoksa her dokunuşta boşuna denemeyelim: açılışta bir kez kontrol et.
-let clipsReady = false;
+let clipsReady = false;           // ses/ klasörü var mı? açılışta bir kez kontrol edilir
 if (location.protocol.startsWith('http')) {
   fetch('ses/01.mp3', { method: 'HEAD' }).then(r => { clipsReady = r.ok; }).catch(() => {});
 }
-function playClip(i) {
+
+// Küçük IndexedDB yardımcısı: { buf: ArrayBuffer, type } olarak saklar (Safari'de de güvenli).
+const recStore = (() => {
+  let dbp;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    try {
+      const r = indexedDB.open('kuran-ogreniyorum-sesler', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('rec');
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    } catch (e) { rej(e); }
+  }));
+  const run = (mode, fn) => open().then(db => new Promise((res, rej) => {
+    const t = db.transaction('rec', mode);
+    const req = fn(t.objectStore('rec'));
+    t.oncomplete = () => res(req && req.result);
+    t.onerror = () => rej(t.error);
+  }));
+  return {
+    set: (k, v) => run('readwrite', st => st.put(v, k)),
+    del: k => run('readwrite', st => st.delete(k)),
+    all: () => open().then(db => new Promise((res, rej) => {
+      const out = {}, req = db.transaction('rec').objectStore('rec').openCursor();
+      req.onsuccess = () => { const c = req.result; if (c) { out[c.key] = c.value; c.continue(); } else res(out); };
+      req.onerror = () => rej(req.error);
+    })),
+  };
+})();
+recStore.all().then(all => {
+  Object.entries(all).forEach(([k, v]) => { recUrls[k] = URL.createObjectURL(new Blob([v.buf], { type: v.type })); });
+  if (current === 'record') renderRecList();
+}).catch(() => {});
+
+function playUrl(url) {
   return new Promise((resolve, reject) => {
-    if (!clipsReady || missingClip.has(i)) return reject();
-    const a = new Audio(`ses/${String(i + 1).padStart(2, '0')}.mp3`);
+    const a = new Audio(url);
     clip = a;
     a.onended = () => resolve();
-    a.onerror = () => { missingClip.add(i); reject(); };
-    a.play().catch(err => { if (err && err.name === 'NotAllowedError') resolve(); else { missingClip.add(i); reject(); } });
+    a.onerror = () => reject();
+    a.play().catch(err => (err && err.name === 'NotAllowedError') ? resolve() : reject());
   });
+}
+function playClip(i) {
+  if (!clipsReady || missingClip.has(i)) return Promise.reject();
+  return playUrl(`ses/${String(i + 1).padStart(2, '0')}.mp3`).catch(() => { missingClip.add(i); throw 0; });
 }
 function hush() {
   try { speechSynthesis.cancel(); } catch (e) { /* yoksay */ }
@@ -133,6 +171,7 @@ function hush() {
 function sayLetter(i) {
   const L = LETTERS[i], r = RATES[S.settings.speed] || RATES.slow;
   const tts = () => (S.settings.voice === 'ar' && hasArabic()) ? speak(L.ar, 'ar', r.ar) : speak(L.tr, 'tr', r.tr);
+  if (recUrls[i]) return playUrl(recUrls[i]).catch(tts);   // ebeveynin sesi her zaman önce gelir
   if (S.settings.voice === 'tr') return tts();
   return playClip(i).catch(tts);
 }
@@ -186,13 +225,14 @@ function renderDots(el, total, filled) {
 const TITLES = {
   home: "Kur'an Öğreniyorum", learn: 'Harfleri Tanı', find: 'Dinle ve Bul', trace: 'Harf Çiz',
   balloon: 'Balon Patlat', memory: 'Hafıza Kartları', garden: 'Harf Bahçem', parent: 'Anne-Baba',
-  table: 'Elif-Ba Tablosu',
+  table: 'Elif-Ba Tablosu', record: 'Harf Seslerim',
 };
 let current = 'home';
 let replay = null; // ödül ekranındaki "Tekrar" ne yapacak
 
 function show(id) {
   stopBalloon();
+  if (typeof stopRec === 'function') stopRec();
   hush();
   current = id;
   document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
@@ -546,6 +586,104 @@ function openGarden() {
   });
 }
 
+// ---------- Harf Seslerim: ebeveyn kaydı ----------
+const REC_MAX_MS = 6000;
+let rec = null;           // { i, mr, stream, timer }
+let recIdx = 0;           // dosya seçilirken hangi harf
+let recLock = 0;
+let micOk = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+try { if (document.featurePolicy && !document.featurePolicy.allowsFeature('microphone')) micOk = false; } catch (e) { /* yoksay */ }
+
+function openRecord() { show('record'); renderRecList(); }
+function renderRecList() {
+  const n = Object.keys(recUrls).length;
+  $('recCount').textContent = `${n} / 28 harf kaydedildi`;
+  $('recMicNote').hidden = micOk;
+  const list = $('recList'); list.innerHTML = '';
+  LETTERS.forEach((L, i) => {
+    const has = !!recUrls[i], busy = rec && rec.i === i;
+    const row = document.createElement('div');
+    row.className = 'rec-row' + (has ? ' has' : '') + (busy ? ' busy' : '');
+    row.style.setProperty('--c', colorOf(i));
+    row.innerHTML = `
+      <span class="rec-ch">${L.c}</span>
+      <span class="rec-nm">${L.tr}<small>${busy ? 'Kaydediliyor… bitince ⏹' : has ? '✔ Kayıtlı' : 'Yapay ses'}</small></span>
+      ${micOk ? `<button class="rec-btn mic" aria-label="${L.tr} harfini kaydet">${busy ? '⏹' : '🎙️'}</button>` : ''}
+      <button class="rec-btn file" aria-label="${L.tr} için ses dosyası seç">📁</button>
+      <button class="rec-btn play" aria-label="${L.tr} harfini dinle">▶</button>
+      ${has ? `<button class="rec-btn del" aria-label="${L.tr} kaydını sil">🗑</button>` : ''}`;
+    const q = sel => row.querySelector(sel);
+    if (q('.mic')) q('.mic').onclick = () => {
+      if (Date.now() < recLock) return;          // yanlışlıkla çift dokunmayı yok say
+      recLock = Date.now() + 700;
+      busy ? stopRec() : startRec(i);
+    };
+    q('.file').onclick = () => { recIdx = i; $('recFile').value = ''; $('recFile').click(); };
+    q('.play').onclick = () => { hush(); sayLetter(i); };
+    if (q('.del')) q('.del').onclick = () => deleteRec(i, q('.del'));
+    list.appendChild(row);
+  });
+}
+async function startRec(i) {
+  if (rec) stopRec();
+  hush();
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  } catch (e) {
+    micOk = false; renderRecList();
+    return;
+  }
+  const chunks = [];
+  const mr = new MediaRecorder(stream);
+  mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  mr.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    rec = null;
+    if (chunks.length) await saveRec(i, new Blob(chunks, { type: mr.mimeType || 'audio/webm' }));
+    renderRecList();
+    hush(); sayLetter(i);
+  };
+  rec = { i, mr, stream, timer: setTimeout(stopRec, REC_MAX_MS) };
+  sfx.flip();
+  mr.start();
+  renderRecList();
+}
+function stopRec() {
+  if (!rec) return;
+  clearTimeout(rec.timer);
+  if (rec.mr.state !== 'inactive') rec.mr.stop();
+}
+async function saveRec(i, blob) {
+  if (recUrls[i]) URL.revokeObjectURL(recUrls[i]);
+  recUrls[i] = URL.createObjectURL(blob);
+  try {
+    await recStore.set(i, { buf: await blob.arrayBuffer(), type: blob.type || 'audio/mpeg' });
+    $('recWarn').hidden = true;
+  } catch (e) {
+    $('recWarn').hidden = false; // bu oturumda çalışır ama kalıcı saklanamadı
+  }
+}
+function deleteRec(i, btn) {
+  if (btn.dataset.armed) {
+    URL.revokeObjectURL(recUrls[i]); delete recUrls[i];
+    recStore.del(i).catch(() => {});
+    renderRecList();
+  } else {
+    btn.dataset.armed = '1'; btn.textContent = 'Sil?'; btn.classList.add('armed');
+    setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = '🗑'; btn.classList.remove('armed'); } }, 3000);
+  }
+}
+$('recFile').onchange = async e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  if (f.size > 3 * 1024 * 1024) { $('recWarn').textContent = 'Bu dosya çok büyük. Lütfen birkaç saniyelik kısa bir kayıt seçin.'; $('recWarn').hidden = false; return; }
+  await saveRec(recIdx, f);
+  renderRecList();
+  hush(); sayLetter(recIdx);
+};
+$('recOpen').onclick = openRecord;
+
 // ---------- Ebeveyn alanı ----------
 function openGate() {
   const a = 2 + Math.floor(Math.random() * 6), b = 2 + Math.floor(Math.random() * 6), ans = a + b;
@@ -593,7 +731,7 @@ $('gateClose').onclick = () => { $('gate').hidden = true; };
 
 // ---------- Genel bağlantılar ----------
 document.querySelectorAll('[data-go]').forEach(b => { b.onclick = () => go(b.dataset.go); });
-$('homeBtn').onclick = () => show('home');
+$('homeBtn').onclick = () => (current === 'record' ? openParent() : show('home'));
 $('rHome').onclick = () => show('home');
 $('rAgain').onclick = () => { $('reward').hidden = true; if (replay) replay(); };
 $('mascot').onclick = () => {

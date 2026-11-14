@@ -258,6 +258,28 @@ main { flex: 1; position: relative; min-height: 0; }
 .note { font-size: .9rem; color: var(--soft); }
 .tips { padding-left: 20px; line-height: 1.5; }
 
+/* ---------- Harf Seslerim ---------- */
+.rec-list { display: flex; flex-direction: column; gap: 8px; }
+.rec-row {
+  --c: #4dabf7; display: flex; align-items: center; gap: 6px;
+  padding: 6px 8px; border-radius: 18px; background: var(--sky2); border: 3px solid transparent;
+}
+.rec-row.has { border-color: var(--c); background: #fff; }
+.rec-row.busy { border-color: var(--bad); background: #fff5f5; }
+.rec-ch { width: 40px; flex: none; text-align: center; font-family: var(--ar); font-weight: 700; font-size: 2.2rem; color: var(--c); line-height: 1.3; }
+.rec-nm { flex: 1; min-width: 0; font-weight: 800; font-size: 1.15rem; line-height: 1.1; }
+.rec-nm small { display: block; font-weight: 500; font-size: .85rem; color: var(--soft); }
+.rec-row.has .rec-nm small { color: var(--ok); }
+.rec-row.busy .rec-nm small { color: var(--bad); }
+.rec-btn {
+  width: 42px; height: 42px; flex: none; border-radius: 14px; background: #fff; font-size: 1.2rem;
+  box-shadow: 0 3px 0 #c5d6e6;
+}
+.rec-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #c5d6e6; }
+.rec-row.busy .mic { background: var(--bad); color: #fff; animation: pulse 1s infinite; }
+.rec-btn.armed { background: var(--bad); color: #fff; font-size: .8rem; font-weight: 800; }
+.rec-alert { background: #fff4e6; color: #a34700; border-radius: 14px; padding: 10px 12px; }
+
 /* ---------- Pencereler ---------- */
 .overlay {
   position: fixed; inset: 0; background: rgba(24, 100, 171, .45); z-index: 20;
@@ -292,3 +314,5 @@ main { flex: 1; position: relative; min-height: 0; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 .tile .ar-emo { font-family: var(--ar); font-weight: 700; color: #fff; text-shadow: 0 3px 0 #e67700; line-height: 1.2; word-spacing: .15em; }
+
+#record .panel { padding-left: 12px; padding-right: 12px; }

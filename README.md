@@ -37,7 +37,8 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 
 Harf okunurken sırasıyla şunlar denenir:
 
-1. **Kayıtlı ses:** `ses/01.mp3` … `ses/28.mp3` varsa onlar çalınır (ayrıntı: [`ses/README.md`](ses/README.md)). En doğal ve doğru sonuç budur.
+1. **Ebeveynin kendi sesi:** Anne-Baba → *Harf seslerini kaydet* ekranından her harf mikrofonla kaydedilebilir ya da telefonun ses kaydedicisiyle kaydedilmiş bir dosya seçilebilir. Kayıtlar o cihazın tarayıcısında (IndexedDB) kalıcı saklanır ve her zaman önce bunlar çalınır. Tarayıcı verileri silinirse kayıtlar da silinir.
+1. **Uygulamayla gelen ses:** `ses/01.mp3` … `ses/28.mp3` varsa onlar çalınır (ayrıntı: [`ses/README.md`](ses/README.md)). En doğal ve doğru sonuç budur.
 2. **Cihazın Arapça sesi:** Harf adları uzatılarak ve hemzesiz yazılır (بَا، تَا، ثَا …), böylece ses sonda aniden kesilmez. Varsayılan hız "Yavaş ve uzun"dur; Anne-Baba bölümünden değiştirilebilir. Cihazdaki daha doğal sesler (Google, Enhanced vb.) tercih edilir.
 3. **Türkçe isim:** Cihazda Arapça ses yoksa Elif, Be, Te … okunur.
 
