@@ -39,6 +39,7 @@ const LETTERS = [
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
+const VERSION = '3 (14.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -185,6 +186,7 @@ function renderDots(el, total, filled) {
 const TITLES = {
   home: "Kur'an Öğreniyorum", learn: 'Harfleri Tanı', find: 'Dinle ve Bul', trace: 'Harf Çiz',
   balloon: 'Balon Patlat', memory: 'Hafıza Kartları', garden: 'Harf Bahçem', parent: 'Anne-Baba',
+  table: 'Elif-Ba Tablosu',
 };
 let current = 'home';
 let replay = null; // ödül ekranındaki "Tekrar" ne yapacak
@@ -206,6 +208,7 @@ function go(id) {
   if (id === 'balloon') return startBalloon();
   if (id === 'memory') return startMemory();
   if (id === 'garden') return openGarden();
+  if (id === 'table') return openTable();
 }
 
 function reward(title, againFn) {
@@ -505,6 +508,28 @@ function flipCard(c) {
   }, 900);
 }
 
+// ---------- 7) Elif-Ba Tablosu: dokun, dinle ----------
+function openTable() {
+  show('table');
+  const g = $('abcGrid');
+  if (g.childElementCount) return;
+  LETTERS.forEach((L, i) => {
+    const b = document.createElement('button');
+    b.className = 'abc-cell';
+    b.style.setProperty('--c', colorOf(i));
+    b.innerHTML = `<span class="ch">${L.c}</span><span class="nm">${L.tr}</span>`;
+    b.setAttribute('aria-label', L.tr + ' harfini dinle');
+    b.onclick = () => {
+      g.querySelectorAll('.playing').forEach(x => x.classList.remove('playing'));
+      replayAnim(b, 'playing');
+      hush(); sayLetter(i);
+      if (!S.seen.includes(i)) markSeen(i);
+      clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove('playing'), 1400);
+    };
+    g.appendChild(b);
+  });
+}
+
 // ---------- 6) Harf Bahçem ----------
 function openGarden() {
   show('garden');
@@ -584,3 +609,4 @@ $('starNum').textContent = S.stars;
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
+$('appVersion').textContent = VERSION;
