@@ -517,8 +517,15 @@ function openParent() {
 $('optSfx').onchange = e => { S.settings.sfx = e.target.checked; save(); };
 $('optVoice').onchange = e => { S.settings.voice = e.target.value; save(); };
 $('optPool').onchange = e => { S.settings.pool = e.target.value; save(); };
+let resetArmed = false;
 $('resetBtn').onclick = () => {
-  if (!confirm('Tüm ilerleme ve yıldızlar silinsin mi?')) return;
+  const btn = $('resetBtn');
+  if (!resetArmed) {
+    resetArmed = true; btn.textContent = 'Emin misiniz? Silmek için tekrar dokunun';
+    setTimeout(() => { resetArmed = false; btn.textContent = 'İlerlemeyi sıfırla'; }, 4000);
+    return;
+  }
+  resetArmed = false; btn.textContent = 'İlerlemeyi sıfırla';
   const settings = S.settings;
   S = JSON.parse(JSON.stringify(DEFAULTS)); S.settings = settings; save();
   $('starNum').textContent = 0; openParent();
