@@ -42,7 +42,7 @@ LETTERS.forEach(L => { L.ar = L.c + FATHA; L.cf = L.c + FATHA; });   // üstünl
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '12 (15.11.2026)';
+const VERSION = '13 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -469,6 +469,19 @@ function renderPens() {
 const tg = { idx: 0, drawing: false, last: null, done: false, size: 0, brush: 0, hue: 0, round: 0, miss: 0, hinted: false, drew: false };
 const guide = $('tGuide'), draw = $('tDraw');
 const gctx = guide.getContext('2d'), dctx = draw.getContext('2d');
+// Taşma görünmesin: çizim önce gizli bir tuvale yapılır, ekrana yalnızca harfin içinde kalan kısmı basılır.
+const rawC = document.createElement('canvas'), rctx = rawC.getContext('2d');
+const maskC = document.createElement('canvas'), mctx = maskC.getContext('2d');
+function paintVisible() {
+  dctx.save();
+  dctx.setTransform(1, 0, 0, 1, 0, 0);
+  dctx.globalCompositeOperation = 'copy';
+  dctx.drawImage(rawC, 0, 0);
+  dctx.globalCompositeOperation = 'destination-in';
+  dctx.drawImage(maskC, 0, 0);
+  dctx.restore();
+}
+function clearInk() { rctx.clearRect(0, 0, tg.size, tg.size); dctx.clearRect(0, 0, tg.size, tg.size); }
 
 const TRACE_ROUNDS = 3;
 function startTrace(i) {
@@ -490,10 +503,11 @@ async function setupTrace() {
   const box = $('tBox').getBoundingClientRect();
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   tg.size = box.width;
-  [guide, draw].forEach(c => { c.width = box.width * dpr; c.height = box.height * dpr; c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0); });
+  [guide, draw, rawC, maskC].forEach(c => { c.width = box.width * dpr; c.height = box.height * dpr; c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0); });
   tg.brush = Math.max(22, tg.size * 0.09);
   drawGuide(gctx, tg.size, L.c, true);
-  dctx.clearRect(0, 0, tg.size, tg.size);
+  drawGuide(mctx, tg.size, L.c, false, 4);     // boyanabilir alan: harfin kendisi (kenarı biraz yumuşak)
+  clearInk();
   tg.drew = false;
   hush(); sayLetter(tg.idx);
 }
@@ -536,18 +550,20 @@ draw.addEventListener('pointerdown', e => {
 draw.addEventListener('pointermove', e => {
   if (!tg.drawing) return;
   const p = pos(e);
-  dctx.strokeStyle = penColor(); dctx.lineWidth = tg.brush; dctx.lineCap = 'round'; dctx.lineJoin = 'round';
-  dctx.globalAlpha = 0.8;
-  dctx.beginPath(); dctx.moveTo(tg.last.x, tg.last.y); dctx.lineTo(p.x, p.y); dctx.stroke();
-  dctx.globalAlpha = 1;
+  rctx.strokeStyle = penColor(); rctx.lineWidth = tg.brush; rctx.lineCap = 'round'; rctx.lineJoin = 'round';
+  rctx.globalAlpha = 0.8;
+  rctx.beginPath(); rctx.moveTo(tg.last.x, tg.last.y); rctx.lineTo(p.x, p.y); rctx.stroke();
+  rctx.globalAlpha = 1;
   tg.last = p;
+  paintVisible();
 });
 const endStroke = () => { if (tg.drawing) { tg.drawing = false; checkTrace(); } };
 draw.addEventListener('pointerup', endStroke);
 draw.addEventListener('pointercancel', endStroke);
 function dot(p) {
-  dctx.fillStyle = penColor(); dctx.globalAlpha = 0.8;
-  dctx.beginPath(); dctx.arc(p.x, p.y, tg.brush / 2, 0, Math.PI * 2); dctx.fill(); dctx.globalAlpha = 1;
+  rctx.fillStyle = penColor(); rctx.globalAlpha = 0.8;
+  rctx.beginPath(); rctx.arc(p.x, p.y, tg.brush / 2, 0, Math.PI * 2); rctx.fill(); rctx.globalAlpha = 1;
+  paintVisible();
 }
 /** Harfin parçalarını (gövde ve her nokta ayrı) bulur: küçük tuvalde bağlı bölgeler. */
 function letterParts(mask, N) {
@@ -582,23 +598,23 @@ function checkTrace() {
   drawGuide(mc, tg.size, LETTERS[tg.idx].c, false, tg.brush * 1.6);
   const near = mc.getImageData(0, 0, N, N).data;
   mc.setTransform(1, 0, 0, 1, 0, 0); mc.clearRect(0, 0, N, N);
-  mc.drawImage(draw, 0, 0, N, N);
+  mc.drawImage(rawC, 0, 0, N, N);
   const ink = mc.getImageData(0, 0, N, N).data;
-  let inkPx = 0, outside = 0;
-  for (let k = 3; k < ink.length; k += 4) if (ink[k] > 60) { inkPx++; if (near[k] < 60) outside++; }
-  const messy = inkPx ? outside / inkPx : 0;
+  // Taşma artık sorun değil; yalnızca bütün kutuyu karalamak kabul edilmez.
+  let emptyPx = 0, outside = 0;
+  for (let k = 3; k < ink.length; k += 4) if (near[k] < 60) { emptyPx++; if (ink[k] > 60) outside++; }
+  const scribble = emptyPx ? outside / emptyPx : 0;
   const parts = letterParts(mask, N).sort((a, b) => b.length - a.length);
   const cover = px => px.filter(p => ink[p * 4 + 3] > 60).length / px.length;
   const body = parts.length ? cover(parts[0]) : 0;
   const smallOk = parts.slice(1).every(px => cover(px) >= 0.5);   // noktalar ve küçük işaretler
-  if (body > 0.6 && smallOk && messy < 0.3) return traceSuccess(messy);
-  if (body > 0.6 && !smallOk && messy < 0.3 && !tg.hinted) {        // gövde bitti, nokta eksik
+  if (body > 0.6 && smallOk && scribble < 0.5) return traceSuccess();
+  if (body > 0.6 && !smallOk && scribble < 0.5 && !tg.hinted) {        // gövde bitti, nokta eksik
     tg.hinted = true; hush(); speak(nameFirst('Noktaları da unutma!', 0.5), 'tr');
   }
 }
-function traceSuccess(messy) {
+function traceSuccess() {
   tg.done = true;
-  if (messy > 0.18) tg.miss++;              // çok taşan çizim tam puan almaz
   $('tBox').classList.add('done');
   sfx.ok(); confetti(40); praise();
   scoreUp(tg.idx);
@@ -616,7 +632,7 @@ function nextTrace() {
   tg.idx = p[(k + 1) % p.length];
   setupTrace();
 }
-$('tClear').onclick = () => { if (tg.done) return; dctx.clearRect(0, 0, tg.size, tg.size); if (tg.drew) tg.miss++; tg.drew = false; tg.hinted = false; };
+$('tClear').onclick = () => { if (tg.done) return; clearInk(); if (tg.drew) tg.miss++; tg.drew = false; tg.hinted = false; };
 $('tNext').onclick = nextTrace;
 $('tSpeak').onclick = () => { hush(); sayLetter(tg.idx); };
 window.addEventListener('resize', () => { if (current === 'trace') setupTrace(); });
