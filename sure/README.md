@@ -24,4 +24,4 @@ Sondaki fazlalığı atmak için `--son <saniye>` verilir.
 ## Şu anki kayıtlar
 
 - `112.mp3` İhlâs: kullanıcının sağladığı "çocuk ezber" kaydı; Besmele + 4 ayet. Sondaki gülme sesi atıldı:
-  `python3 tools/sure-ekle.py 112 ihlas.mp3 --son 12.68`. `112-075.mp3` ve `112-050.mp3` yavaş sürümler.
+  `python3 tools/sure-ekle.py 112 ihlas.mp3 --son 13.24`. `112-075.mp3` ve `112-050.mp3` yavaş sürümler.

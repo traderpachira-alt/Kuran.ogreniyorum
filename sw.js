@@ -1,5 +1,5 @@
 // Basit çevrimdışı önbellek
-const CACHE = 'kuran-ogreniyorum-v17';
+const CACHE = 'kuran-ogreniyorum-v18';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'bahce3d.js', 'sureler.js', 'sureler-veri.js', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {
