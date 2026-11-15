@@ -330,6 +330,7 @@ main { flex: 1; position: relative; min-height: 0; }
 .rec-row.busy { border-color: var(--bad); background: #fff5f5; }
 .rec-ch { width: 40px; flex: none; text-align: center; font-family: var(--ar); font-weight: 700; font-size: 2.2rem; color: var(--c); line-height: 1.3; }
 .rec-nm { flex: 1; min-width: 0; font-weight: 800; font-size: 1.15rem; line-height: 1.1; }
+.rec-alt { font-weight: 500; font-size: .85rem; color: var(--soft); }
 .rec-nm small { display: block; font-weight: 500; font-size: .85rem; color: var(--soft); }
 .rec-row.has .rec-nm small { color: var(--ok); }
 .rec-row.busy .rec-nm small { color: var(--bad); }

@@ -13,7 +13,7 @@
        python3 tools/sesleri-ekle.py --tek-kayit elifba.m4a
 
 Her ses: baştaki/sondaki sessizlik kırpılır, ses seviyesi eşitlenir ve her cihazda çalan
-ses/NN.m4a biçimine çevrilir. Liste ses/sesler.json dosyasına yazılır. ffmpeg gerekir.
+ses/NN.mp3 biçimine çevrilir. Liste ses/sesler.json dosyasına yazılır. ffmpeg gerekir.
 """
 import base64
 import json
@@ -27,9 +27,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SES = ROOT / 'ses'
 NAMES = ['Elif', 'Be', 'Te', 'Se', 'Cim', 'Ha', 'Hı', 'Dal', 'Zel', 'Ra', 'Ze', 'Sin', 'Şın', 'Sad',
          'Dad', 'Tı', 'Zı', 'Ayn', 'Ğayn', 'Fe', 'Kaf', 'Kef', 'Lam', 'Mim', 'Nun', 'Vav', 'He', 'Ye']
-CLEAN = ('silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.08,'
-         'areverse,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.15,areverse,'
-         'loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=in:d=0.02')
+# Sessizlik kırpma; kısa harf seslerinde loudnorm güvenilir olmadığı için seviye tepe değere göre eşitlenir.
+TRIM = ('silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.08,'
+        'areverse,silenceremove=start_periods=1:start_threshold=-42dB:start_silence=0.15,areverse,'
+        'afade=t=in:d=0.015')
+PEAK_DB = -1.0
 
 
 def run(cmd):
@@ -37,13 +39,21 @@ def run(cmd):
 
 
 def convert(src, i, start=None, end=None):
-    """src dosyasını (isteğe bağlı olarak start-end aralığını) ses/NN.m4a olarak yazar."""
-    out = SES / f'{i + 1:02d}.m4a'
-    cmd = ['ffmpeg', '-y', '-loglevel', 'error']
-    if start is not None:
-        cmd += ['-ss', f'{start:.3f}', '-to', f'{end:.3f}']
-    cmd += ['-i', str(src), '-af', CLEAN, '-ac', '1', '-ar', '44100', '-c:a', 'aac', '-b:a', '96k', str(out)]
-    r = run(cmd)
+    """src dosyasını (isteğe bağlı olarak start-end aralığını) ses/NN.mp3 olarak yazar."""
+    out = SES / f'{i + 1:02d}.mp3'
+    with tempfile.TemporaryDirectory() as tmp:
+        wav = pathlib.Path(tmp) / 'k.wav'
+        cmd = ['ffmpeg', '-y', '-loglevel', 'error']
+        if start is not None:
+            cmd += ['-ss', f'{start:.3f}', '-to', f'{end:.3f}']
+        cmd += ['-i', str(src), '-af', TRIM, '-ac', '1', '-ar', '44100', str(wav)]
+        r = run(cmd)
+        if r.returncode != 0 or not wav.exists():
+            raise RuntimeError(f'{NAMES[i]} okunamadı: {r.stderr.strip()[:300]}')
+        m = re.search(r'max_volume: (-?[\d.]+) dB', run(['ffmpeg', '-i', str(wav), '-af', 'volumedetect', '-f', 'null', '-']).stderr)
+        gain = PEAK_DB - float(m.group(1)) if m else 0.0
+        r = run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(wav), '-af', f'volume={gain:.2f}dB,apad=pad_dur=0.08',
+                 '-c:a', 'libmp3lame', '-b:a', '96k', str(out)])
     if r.returncode != 0 or not out.exists() or out.stat().st_size < 500:
         raise RuntimeError(f'{NAMES[i]} dönüştürülemedi: {r.stderr.strip()[:300]}')
     return out.name
@@ -103,7 +113,7 @@ def from_single(path):
             parts = speech_parts(path, noise_db, min_silence)
             if len(parts) == 28:
                 print(f'28 harf bulundu (sessizlik ≥ {min_silence}s, eşik {noise_db}dB).')
-                return {i: convert(path, i, max(0, a - 0.1), b + 0.15) for i, (a, b) in enumerate(parts)}
+                return {i: convert(path, i, max(0, a - 0.08), b + 0.12) for i, (a, b) in enumerate(parts)}
     sys.exit('Kayıt 28 parçaya bölünemedi. Harfler arasında 1 saniye kadar sessizlik bırakarak '
              'yeniden kaydedin ya da harfleri ayrı ayrı gönderin.')
 

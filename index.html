@@ -141,7 +141,7 @@
   <section class="screen" id="record">
     <div class="panel">
       <h2 id="recCount">0 / 28 harf kaydedildi</h2>
-      <p class="note">🎙️ ile kayda başlayın, harfi uzatarak söyleyin, ⏹ ile bitirin (en fazla 6 saniye). ▶ ile dinleyin. Kaydı olmayan harflerde yapay ses kullanılır.</p>
+      <p class="note">🎙️ ile kayda başlayın, harfi uzatarak söyleyin, ⏹ ile bitirin (en fazla 6 saniye). ▶ ile dinleyin. Kaydı olmayan harflerde hocanın sesi çalar.</p>
       <p class="note rec-alert" id="recMicNote" hidden>Bu ekranda mikrofon kullanılamıyor. Telefonunuzun <b>ses kaydedici</b> uygulamasıyla harfi kaydedin, sonra o harfin 📁 düğmesiyle dosyayı seçin.</p>
       <p class="note rec-alert" id="recWarn" hidden>Kayıt bu cihazda kalıcı olarak saklanamadı (gizli sekme olabilir). Sayfa kapanınca silinecek.</p>
       <div class="rec-list" id="recList"></div>
@@ -163,7 +163,7 @@
       <h2>İlerleme</h2>
       <div class="stats" id="pStats"></div>
       <h2>Harf sesleri</h2>
-      <p class="note">Harfleri kendi sesinizle, Türkiye'de okunduğu gibi kaydedin. Kayıtlar bu cihazda saklanır ve oyunlarda yapay sesin yerine çalınır.</p>
+      <p class="note">Harfler hocanın sesiyle üstünlü okunur (بَ Be, جَ Ce …). İsterseniz kendi sesinizle kaydedebilirsiniz; kayıtlarınız bu cihazda saklanır ve hocanın sesinin yerine çalınır.</p>
       <button class="pill" id="recOpen">🎙️ Harf seslerini kaydet</button>
       <h2>Ayarlar</h2>
       <div class="row"><label for="optName">Çocuğun adı</label>
@@ -171,7 +171,7 @@
       </div>
       <p class="note">Hilal övgülerde ve yönergelerde çocuğa adıyla seslenir ("Ayşe, bul bakalım!", "Aferin, Ayşe!"). Ad yalnızca bu cihazda saklanır.</p>
       <label class="row"><span>Ses efektleri</span><input type="checkbox" id="optSfx"></label>
-      <label class="row"><span>Harf okunuşu</span>
+      <label class="row"><span>Yapay ses (kayıt yoksa)</span>
         <select id="optVoice"><option value="ar">Arapça ses (varsa)</option><option value="tr">Türkçe isim</option></select>
       </label>
       <label class="row"><span>Okuma hızı</span>

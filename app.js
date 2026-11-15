@@ -5,41 +5,44 @@
    ========================================================= */
 
 // ---------- Veri: 28 harf ----------
+// tr: ekranda yazan ve okunan üstünlü okunuş (بَ = Be, جَ = Ce …); name: harfin adı (ebeveyn için ipucunda)
 const LETTERS = [
-  { c: 'ا', tr: 'Elif', ar: 'أَلِف',  hint: 'Dimdik bir çubuk' },
-  { c: 'ب', tr: 'Be',   ar: 'بَا',   hint: 'Gemi gibi, altında 1 nokta' },
-  { c: 'ت', tr: 'Te',   ar: 'تَا',   hint: 'Üstünde 2 nokta' },
-  { c: 'ث', tr: 'Se',   ar: 'ثَا',   hint: 'Üstünde 3 nokta' },
-  { c: 'ج', tr: 'Cim',  ar: 'جِيم',   hint: 'Karnında 1 nokta' },
-  { c: 'ح', tr: 'Ha',   ar: 'حَا',   hint: 'Cim gibi ama noktasız' },
-  { c: 'خ', tr: 'Hı',   ar: 'خَا',   hint: 'Başında 1 nokta' },
-  { c: 'د', tr: 'Dal',  ar: 'دَال',   hint: 'Küçük bir köşe, noktasız' },
-  { c: 'ذ', tr: 'Zel',  ar: 'ذَال',   hint: 'Dal gibi, üstünde 1 nokta' },
-  { c: 'ر', tr: 'Ra',   ar: 'رَا',   hint: 'Kaydırak gibi, noktasız' },
-  { c: 'ز', tr: 'Ze',   ar: 'زَاي',   hint: 'Ra gibi, üstünde 1 nokta' },
-  { c: 'س', tr: 'Sin',  ar: 'سِين',   hint: 'Üç küçük diş' },
-  { c: 'ش', tr: 'Şın',  ar: 'شِين',   hint: 'Dişlerin üstünde 3 nokta' },
-  { c: 'ص', tr: 'Sad',  ar: 'صَاد',   hint: 'Yumurta gibi, noktasız' },
-  { c: 'ض', tr: 'Dad',  ar: 'ضَاد',   hint: 'Sad gibi, üstünde 1 nokta' },
-  { c: 'ط', tr: 'Tı',   ar: 'طَا',   hint: 'Bayrak direği gibi' },
-  { c: 'ظ', tr: 'Zı',   ar: 'ظَا',   hint: 'Tı gibi, üstünde 1 nokta' },
-  { c: 'ع', tr: 'Ayn',  ar: 'عَيْن',  hint: 'Açık ağız gibi, noktasız' },
-  { c: 'غ', tr: 'Ğayn', ar: 'غَيْن',  hint: 'Ayn gibi, üstünde 1 nokta' },
-  { c: 'ف', tr: 'Fe',   ar: 'فَا',   hint: 'Üstünde 1 nokta' },
-  { c: 'ق', tr: 'Kaf',  ar: 'قَاف',   hint: 'Üstünde 2 nokta, derin çanak' },
-  { c: 'ك', tr: 'Kef',  ar: 'كَاف',   hint: 'İçinde küçük bir işaret' },
-  { c: 'ل', tr: 'Lam',  ar: 'لَام',   hint: 'Uzun boylu, aşağı kıvrık' },
-  { c: 'م', tr: 'Mim',  ar: 'مِيم',   hint: 'Yuvarlak bir başı var' },
-  { c: 'ن', tr: 'Nun',  ar: 'نُون',   hint: 'Kâse gibi, üstünde 1 nokta' },
-  { c: 'و', tr: 'Vav',  ar: 'وَاو',   hint: 'Küçük başlı, aşağı kıvrık' },
-  { c: 'ه', tr: 'He',   ar: 'هَا',   hint: 'Yuvarlacık' },
-  { c: 'ي', tr: 'Ye',   ar: 'يَا',   hint: 'Altında 2 nokta' },
+  { c: 'ا', tr: 'E',  name: 'Elif', hint: 'Dimdik bir çubuk' },
+  { c: 'ب', tr: 'Be', name: 'Be',   hint: 'Gemi gibi, altında 1 nokta' },
+  { c: 'ت', tr: 'Te', name: 'Te',   hint: 'Üstünde 2 nokta' },
+  { c: 'ث', tr: 'Se', name: 'Se (peltek)', hint: 'Üstünde 3 nokta' },
+  { c: 'ج', tr: 'Ce', name: 'Cim',  hint: 'Karnında 1 nokta' },
+  { c: 'ح', tr: 'Ha', name: 'Ha',   hint: 'Cim gibi ama noktasız' },
+  { c: 'خ', tr: 'Ha', name: 'Hı',   hint: 'Başında 1 nokta' },
+  { c: 'د', tr: 'De', name: 'Dal',  hint: 'Küçük bir köşe, noktasız' },
+  { c: 'ذ', tr: 'Ze', name: 'Zel (peltek)', hint: 'Dal gibi, üstünde 1 nokta' },
+  { c: 'ر', tr: 'Ra', name: 'Ra',   hint: 'Kaydırak gibi, noktasız' },
+  { c: 'ز', tr: 'Ze', name: 'Ze',   hint: 'Ra gibi, üstünde 1 nokta' },
+  { c: 'س', tr: 'Se', name: 'Sin',  hint: 'Üç küçük diş' },
+  { c: 'ش', tr: 'Şe', name: 'Şın',  hint: 'Dişlerin üstünde 3 nokta' },
+  { c: 'ص', tr: 'Sa', name: 'Sad',  hint: 'Yumurta gibi, noktasız' },
+  { c: 'ض', tr: 'Da', name: 'Dad',  hint: 'Sad gibi, üstünde 1 nokta' },
+  { c: 'ط', tr: 'Ta', name: 'Tı',   hint: 'Bayrak direği gibi' },
+  { c: 'ظ', tr: 'Za', name: 'Zı',   hint: 'Tı gibi, üstünde 1 nokta' },
+  { c: 'ع', tr: 'A',  name: 'Ayn',  hint: 'Açık ağız gibi, noktasız' },
+  { c: 'غ', tr: 'Ğa', name: 'Ğayn', hint: 'Ayn gibi, üstünde 1 nokta' },
+  { c: 'ف', tr: 'Fe', name: 'Fe',   hint: 'Üstünde 1 nokta' },
+  { c: 'ق', tr: 'Ka', name: 'Kaf',  hint: 'Üstünde 2 nokta, derin çanak' },
+  { c: 'ك', tr: 'Ke', name: 'Kef',  hint: 'İçinde küçük bir işaret' },
+  { c: 'ل', tr: 'Le', name: 'Lam',  hint: 'Uzun boylu, aşağı kıvrık' },
+  { c: 'م', tr: 'Me', name: 'Mim',  hint: 'Yuvarlak bir başı var' },
+  { c: 'ن', tr: 'Ne', name: 'Nun',  hint: 'Kâse gibi, üstünde 1 nokta' },
+  { c: 'و', tr: 'Ve', name: 'Vav',  hint: 'Küçük başlı, aşağı kıvrık' },
+  { c: 'ه', tr: 'He', name: 'He',   hint: 'Yuvarlacık' },
+  { c: 'ي', tr: 'Ye', name: 'Ye',   hint: 'Altında 2 nokta' },
 ];
+const FATHA = '\u064E';
+LETTERS.forEach(L => { L.ar = L.c + FATHA; L.cf = L.c + FATHA; });   // üstünlü yazılış: بَ
 
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '9 (15.11.2026)';
+const VERSION = '10 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -109,17 +112,39 @@ function speak(text, lang = 'tr', rate) {
 }
 
 // ---------- Kayıtlı sesler ----------
-// 1) Ebeveynin uygulama içinde kaydettiği sesler (bu cihazda, IndexedDB'de kalıcı)
-// 2) ses/01.mp3 … ses/28.mp3 dosyaları (uygulamayla birlikte yayınlanan kayıtlar)
-let clip = null;
-const recUrls = {};               // harf no -> oynatılabilir adres (bellekte hazır, anında çalsın)
-const missingClip = new Set();
-// ses/sesler.json: uygulamayla gelen kayıtların listesi, ör. {"0": "01.m4a", "1": "02.m4a"}
-let appClips = {};
-fetch('ses/sesler.json').then(r => (r.ok ? r.json() : {})).then(j => {
-  appClips = j || {};
+// Öncelik: 1) ebeveynin bu cihazda kaydettiği ses  2) uygulamayla gelen hoca sesi (ses/)  3) yapay ses
+// Kayıtlar Web Audio ile çalınır: önceden çözülür, dokununca bekletmeden başlar.
+let actx = null;
+function getCtx() { return actx || (actx = new (window.AudioContext || window.webkitAudioContext)()); }
+function decodeAudio(buf) {
+  return new Promise((res, rej) => {
+    try { const p = getCtx().decodeAudioData(buf.slice(0), res, rej); if (p && p.then) p.then(res, rej); } catch (e) { rej(e); }
+  });
+}
+let clip = null, srcNode = null;
+const recRaw = {};   // harf no -> { buf, type } (ebeveyn kaydı, yedek için ham hali)
+const recBuf = {};   // harf no -> çözülmüş ses
+const recUrls = {};  // çözülemeyen biçimler için yedek: <audio> adresi
+const appBuf = {};   // harf no -> uygulamayla gelen çözülmüş ses
+let appClips = {};   // harf no -> dosya adı (ses/sesler.json)
+
+async function loadAppClips() {
+  try {
+    const embedded = window.KURAN_CLIPS;          // tek dosyalık sürümde sayfanın içine gömülü
+    if (embedded) {
+      appClips = Object.fromEntries(Object.keys(embedded).map(k => [k, true]));
+      await Promise.all(Object.entries(embedded).map(async ([k, b64]) => { appBuf[k] = await decodeAudio(b64ToBuf(b64)); }));
+    } else {
+      const r = await fetch('ses/sesler.json');
+      if (!r.ok) return;
+      appClips = await r.json();
+      await Promise.all(Object.entries(appClips).map(async ([k, f]) => {
+        appBuf[k] = await decodeAudio(await (await fetch('ses/' + f)).arrayBuffer());
+      }));
+    }
+  } catch (e) { /* kayıt yoksa yapay ses kullanılır */ }
   if (current === 'record') renderRecList();
-}).catch(() => {});
+}
 
 // Küçük IndexedDB yardımcısı: { buf: ArrayBuffer, type } olarak saklar (Safari'de de güvenli).
 const recStore = (() => {
@@ -148,11 +173,31 @@ const recStore = (() => {
     })),
   };
 })();
-recStore.all().then(all => {
-  Object.entries(all).forEach(([k, v]) => { recUrls[k] = URL.createObjectURL(new Blob([v.buf], { type: v.type })); });
-  if (current === 'record') renderRecList();
-}).catch(() => {});
+/** Ebeveyn kaydını belleğe alır: önce çözmeyi dener, olmazsa <audio> adresi hazırlar. */
+async function loadRec(i, buf, type) {
+  recRaw[i] = { buf, type };
+  delete recBuf[i];
+  if (recUrls[i]) { URL.revokeObjectURL(recUrls[i]); delete recUrls[i]; }
+  try { recBuf[i] = await decodeAudio(buf); }
+  catch (e) { recUrls[i] = URL.createObjectURL(new Blob([buf], { type })); }
+}
+function dropRec(i) {
+  delete recRaw[i]; delete recBuf[i];
+  if (recUrls[i]) { URL.revokeObjectURL(recUrls[i]); delete recUrls[i]; }
+}
+const hasRec = i => !!recRaw[i];
 
+function playBuffer(b) {
+  return new Promise(resolve => {
+    const c = getCtx();
+    if (c.state === 'suspended') c.resume();
+    const s = c.createBufferSource();
+    s.buffer = b; s.connect(c.destination);
+    s.onended = () => { if (srcNode === s) srcNode = null; resolve(); };
+    srcNode = s; s._done = resolve;
+    s.start();
+  });
+}
 function playUrl(url) {
   return new Promise((resolve, reject) => {
     const a = new Audio(url);
@@ -162,20 +207,18 @@ function playUrl(url) {
     a.play().catch(err => (err && err.name === 'NotAllowedError') ? resolve() : reject());
   });
 }
-function playClip(i) {
-  if (!appClips[i] || missingClip.has(i)) return Promise.reject();
-  return playUrl('ses/' + appClips[i]).catch(() => { missingClip.add(i); throw 0; });
-}
 function hush() {
   try { speechSynthesis.cancel(); } catch (e) { /* yoksay */ }
   if (clip) { clip.pause(); clip = null; }
+  if (srcNode) { const s = srcNode; srcNode = null; try { s.onended = null; s.stop(); } catch (e) { /* yoksay */ } if (s._done) s._done(); }
 }
 function sayLetter(i) {
   const L = LETTERS[i], r = RATES[S.settings.speed] || RATES.slow;
   const tts = () => (S.settings.voice === 'ar' && hasArabic()) ? speak(L.ar, 'ar', r.ar) : speak(L.tr, 'tr', r.tr);
-  if (recUrls[i]) return playUrl(recUrls[i]).catch(tts);   // ebeveynin sesi her zaman önce gelir
-  if (S.settings.voice === 'tr') return tts();
-  return playClip(i).catch(tts);
+  if (recBuf[i]) return playBuffer(recBuf[i]);              // ebeveynin sesi her zaman önce gelir
+  if (recUrls[i]) return playUrl(recUrls[i]).catch(tts);
+  if (appBuf[i]) return playBuffer(appBuf[i]);              // hocanın sesi
+  return tts();
 }
 function praise() { const p = rand(PRAISE); speak(withName(p, 0.6), 'tr'); return p; }
 
@@ -207,11 +250,11 @@ function greet() {
 }
 
 // ---------- Ses: efektler (dosya gerektirmez) ----------
-let actx;
 function tone(freqs, dur = 0.12, type = 'sine', vol = 0.2) {
   if (!S.settings.sfx) return;
   try {
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const actx = getCtx();
+    if (actx.state === 'suspended') actx.resume();
     const t0 = actx.currentTime;
     freqs.forEach((f, k) => {
       const o = actx.createOscillator(), g = actx.createGain(), t = t0 + k * dur;
@@ -307,9 +350,9 @@ function openLearn(i) {
 function renderLearn() {
   const L = LETTERS[li], card = $('lCard');
   card.style.setProperty('--c', colorOf(li));
-  $('lChar').textContent = L.c;
+  $('lChar').textContent = L.cf;
   $('lName').textContent = L.tr;
-  $('lHint').textContent = L.hint;
+  $('lHint').textContent = `${L.name} harfi · ${L.hint}`;
   $('lCount').textContent = `${li + 1} / ${LETTERS.length}`;
   replayAnim(card, 'pop');
   markSeen(li);
@@ -329,8 +372,9 @@ function nextFind() {
   const p = pool();
   const n = p.length >= 8 ? 4 : 3;
   fg.target = rand(p);
-  let others = sample(p.filter(x => x !== fg.target), n - 1);
-  if (others.length < n - 1) others = others.concat(sample(LETTERS.map((_, k) => k).filter(x => x !== fg.target && !others.includes(x)), n - 1 - others.length));
+  const same = x => LETTERS[x].tr === LETTERS[fg.target].tr;
+  let others = sample(p.filter(x => !same(x)), n - 1);
+  if (others.length < n - 1) others = others.concat(sample(LETTERS.map((_, k) => k).filter(x => !same(x) && !others.includes(x)), n - 1 - others.length));
   const opts = shuffle([fg.target, ...others]);
   $('fOpts').innerHTML = '';
   opts.forEach((i, k) => {
@@ -618,8 +662,8 @@ function openTable() {
     const b = document.createElement('button');
     b.className = 'abc-cell';
     b.style.setProperty('--c', colorOf(i));
-    b.innerHTML = `<span class="ch">${L.c}</span><span class="nm">${L.tr}</span>`;
-    b.setAttribute('aria-label', L.tr + ' harfini dinle');
+    b.innerHTML = `<span class="ch">${L.cf}</span><span class="nm">${L.tr}</span>`;
+    b.setAttribute('aria-label', L.name + ' harfini dinle');
     b.onclick = () => {
       g.querySelectorAll('.playing').forEach(x => x.classList.remove('playing'));
       replayAnim(b, 'playing');
@@ -767,18 +811,18 @@ try { if (document.featurePolicy && !document.featurePolicy.allowsFeature('micro
 
 function openRecord() { show('record'); renderRecList(); }
 function renderRecList() {
-  const n = Object.keys(recUrls).length;
+  const n = Object.keys(recRaw).length;
   $('recCount').textContent = `${n} / 28 harf kaydedildi`;
   $('recMicNote').hidden = micOk;
   const list = $('recList'); list.innerHTML = '';
   LETTERS.forEach((L, i) => {
-    const has = !!recUrls[i], busy = rec && rec.i === i;
+    const has = hasRec(i), busy = rec && rec.i === i;
     const row = document.createElement('div');
     row.className = 'rec-row' + (has ? ' has' : '') + (busy ? ' busy' : '');
     row.style.setProperty('--c', colorOf(i));
     row.innerHTML = `
-      <span class="rec-ch">${L.c}</span>
-      <span class="rec-nm">${L.tr}<small>${busy ? 'Kaydediliyor… bitince ⏹' : has ? '✔ Kayıtlı' : appClips[i] ? 'Uygulama sesi' : 'Yapay ses'}</small></span>
+      <span class="rec-ch">${L.cf}</span>
+      <span class="rec-nm">${L.tr} <span class="rec-alt">${L.name}</span><small>${busy ? 'Kaydediliyor… bitince ⏹' : has ? '✔ Kayıtlı' : appClips[i] ? 'Hoca sesi' : 'Yapay ses'}</small></span>
       ${micOk ? `<button class="rec-btn mic" aria-label="${L.tr} harfini kaydet">${busy ? '⏹' : '🎙️'}</button>` : ''}
       <button class="rec-btn file" aria-label="${L.tr} için ses dosyası seç">📁</button>
       <button class="rec-btn play" aria-label="${L.tr} harfini dinle">▶</button>
@@ -826,10 +870,10 @@ function stopRec() {
   if (rec.mr.state !== 'inactive') rec.mr.stop();
 }
 async function saveRec(i, blob) {
-  if (recUrls[i]) URL.revokeObjectURL(recUrls[i]);
-  recUrls[i] = URL.createObjectURL(blob);
+  const buf = await blob.arrayBuffer(), type = blob.type || 'audio/mpeg';
+  await loadRec(i, buf, type);
   try {
-    await recStore.set(i, { buf: await blob.arrayBuffer(), type: blob.type || 'audio/mpeg' });
+    await recStore.set(i, { buf, type });
     $('recWarn').hidden = true;
   } catch (e) {
     $('recWarn').hidden = false; // bu oturumda çalışır ama kalıcı saklanamadı
@@ -837,7 +881,7 @@ async function saveRec(i, blob) {
 }
 function deleteRec(i, btn) {
   if (btn.dataset.armed) {
-    URL.revokeObjectURL(recUrls[i]); delete recUrls[i];
+    dropRec(i);
     recStore.del(i).catch(() => {});
     renderRecList();
   } else {
@@ -872,12 +916,11 @@ function recNote(text, ok) {
   el.classList.toggle('ok', !!ok);
 }
 async function exportRecs() {
-  const keys = Object.keys(recUrls);
+  const keys = Object.keys(recRaw);
   if (!keys.length) return recNote('Henüz kayıtlı harf yok. Önce birkaç harf kaydedin.');
   const recordings = {};
   for (const k of keys) {
-    const blob = await (await fetch(recUrls[k])).blob();
-    recordings[k] = { type: blob.type || 'audio/mpeg', data: bufToB64(await blob.arrayBuffer()) };
+    recordings[k] = { type: recRaw[k].type || 'audio/mpeg', data: bufToB64(recRaw[k].buf) };
   }
   const json = JSON.stringify({ app: 'kuran-ogreniyorum', version: 1, created: new Date().toISOString(), recordings });
   const filename = `kuran-ogreniyorum-sesler-${new Date().toISOString().slice(0, 10)}.json`;
@@ -989,5 +1032,10 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 $('appVersion').textContent = VERSION;
+recStore.all().then(async all => {
+  for (const [k, v] of Object.entries(all)) await loadRec(k, v.buf, v.type);
+  if (current === 'record') renderRecList();
+}).catch(() => {});
+loadAppClips();
 greet();
 renderHat();

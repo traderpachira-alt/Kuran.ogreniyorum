@@ -1,6 +1,7 @@
 # Uygulamayla gelen harf sesleri
 
 Bu klasördeki kayıtlar uygulamayı açan **herkese** çalınır (bir hocanın sesi gibi).
+Harfler **üstünlü** okunur: 01 = اَ E, 02 = بَ Be, 03 = تَ Te … 05 = جَ Ce … 28 = يَ Ye.
 Kaydı olmayan harflerde cihazın yapay sesi kullanılır. Ebeveynin kendi cihazında yaptığı kayıtlar
 bunların da önüne geçer.
 
@@ -21,8 +22,12 @@ ses seviyesini eşitler ve her cihazda çalan `.m4a` biçimine çevirir.
 
        python3 tools/sesleri-ekle.py --tek-kayit elifba.m4a
 
-3. **Ayrı dosyalar:** `01.m4a` (Elif), `02.m4a` (Be) … `28.m4a` (Ye) adlı dosyaların olduğu bir klasör.
+3. **Ayrı dosyalar:** `01` (E), `02` (Be) … `28` (Ye) ile başlayan adlarda ses dosyalarının olduğu bir klasör.
 
        python3 tools/sesleri-ekle.py kayitlar/
 
 Sonra değişiklikleri depoya gönderip uygulamayı yeniden yayınlayın.
+
+## Şu anki kayıtlar
+
+`01.mp3` … `28.mp3`: Harflerin üstünlü okunuşları; sahibinin izniyle bir YouTube videosunun sesinden, `--tek-kayit` ile bölünerek alındı.

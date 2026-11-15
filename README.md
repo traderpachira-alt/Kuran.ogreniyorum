@@ -38,18 +38,19 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 
 ## Ses
 
+Harfler **üstünlü okunuşlarıyla** öğretilir: بَ Be, جَ Ce, دَ De, مَ Me … Kartlarda ve Elif-Ba Tablosu'nda harf üstünlü yazılır (üstün işaretiyle); harfin adı (Cim, Dal, Mim …) ebeveyn için kartın altındaki ipucunda yazar. Aynı okunan harfler (حَ/خَ Ha, ثَ/سَ Se, ذَ/زَ Ze) Dinle ve Bul'da aynı soruda seçenek olarak çıkmaz.
+
 Harf okunurken sırasıyla şunlar denenir:
 
-1. **Ebeveynin kendi sesi:** Anne-Baba → *Harf seslerini kaydet* ekranından her harf mikrofonla kaydedilebilir ya da telefonun ses kaydedicisiyle kaydedilmiş bir dosya seçilebilir. Kayıtlar o cihazın tarayıcısında (IndexedDB) kalıcı saklanır ve her zaman önce bunlar çalınır. Tarayıcı verileri silinirse kayıtlar da silinir.
-1. **Uygulamayla gelen ses:** `ses/` klasöründeki kayıtlar (ör. bir hocanın sesi) herkese çalınır. Hocanın kayıtları uygulamadaki **📤 Yedek al** dosyasından, tek bir uzun kayıttan ya da ayrı dosyalardan `tools/sesleri-ekle.py` ile eklenir (ayrıntı: [`ses/README.md`](ses/README.md)).
-2. **Cihazın Arapça sesi:** Harf adları uzatılarak ve hemzesiz yazılır (بَا، تَا، ثَا …), böylece ses sonda aniden kesilmez. Varsayılan hız "Yavaş ve uzun"dur; Anne-Baba bölümünden değiştirilebilir. Cihazdaki daha doğal sesler (Google, Enhanced vb.) tercih edilir.
-3. **Türkçe isim:** Cihazda Arapça ses yoksa Elif, Be, Te … okunur.
+1. **Ebeveynin kendi sesi:** Anne-Baba → *Harf seslerini kaydet* ekranından kaydedilen sesler (o cihazda, IndexedDB'de kalıcı).
+2. **Hocanın sesi:** `ses/` klasöründeki kayıtlar herkese çalınır. Kayıtlar `tools/sesleri-ekle.py` ile eklenir (ayrıntı: [`ses/README.md`](ses/README.md)). Şu anki kayıtlar, sahibinin izniyle, harflerin üstünlü okunuşlarının okunduğu bir videodan alınmıştır.
+3. **Yapay ses:** Kayıt yoksa cihazın metin okuma sesi.
 
-Oyun sesleri (doğru, yanlış, balon patlaması) Web Audio ile üretilir; ses dosyası gerekmez.
+Kayıtlar Web Audio ile önceden çözülüp çalınır; dokununca beklemeden başlar. Oyun sesleri de Web Audio ile üretilir.
 
 ## Paylaşılabilir tek dosya
 
-`python3 tools/tek-dosya.py çıktı.html` komutu üç dosyayı tek bir sayfada birleştirir. claude.ai bağlantısı olarak yayınlanan sürüm budur.
+`python3 tools/tek-dosya.py çıktı.html` komutu üç dosyayı ve `ses/` kayıtlarını tek bir sayfada birleştirir. claude.ai bağlantısı olarak yayınlanan sürüm budur.
 
 ## Dosyalar
 
