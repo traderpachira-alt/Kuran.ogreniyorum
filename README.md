@@ -34,6 +34,7 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 | 🧩 **Hafıza Kartları** | Görsel hafıza | Kartları çevir, aynı harfleri eşleştir (3–4 çift). |
 | 🌷 **Harf Bahçem** | İlerlemeyi görmek | 28 harf; görülen harfler 🌱 filiz, en az 3 kez doğru bilinen harfler 🌸 çiçek olur. |
 | 🎁 **Yıldız Dükkanı** | Motivasyon | Bölüm sonunda kazanılan yıldızlarla bahçeye düşük poligonlu 3B hayvanlar ve süsler alınır (civciv, tavşan, kedi, kuzu, kaplumbağa, ördek, deve, kuş, kelebek, ağaç, ev, cami …). Hayvanlar bahçede kendi kendine dolaşır, kuşlar ve kelebekler uçar; dokununca zıplarlar, parmakla başka yere taşınabilirler. Hilal'e taç, şapka gibi süsler de alınır. Fiyatlar 2–15 yıldız. 3B desteklenmeyen cihazlarda bahçe emoji çıkartmalarla gösterilir. |
+| 📜 **Sureler** | İhlâs, Kevser, Fil | Sure ekranda Osmanî hatla, her ayetin altında Türkçe okunuşuyla görünür. Hocanın kaydı çalarken okunan kelimeler belirginleşir; okunmakta olan kelime sağdan sola dolar. Ayete ya da kelimeye dokununca yalnız o kısım okunur. **Birlikte oku** modunda her ayetten sonra çocuğun tekrar etmesi için durulur. Sure sonuna kadar dinlenince günde bir kez 3 yıldız verilir. |
 | 🔤 **Elif-Ba Tablosu** | Harflerin okunuşu | 28 harf tek ekranda; hangisine dokunulursa o harf okunur. Serbest keşif içindir.
 
 ## Ses
@@ -59,6 +60,8 @@ Kayıtlar Web Audio ile önceden çözülüp çalınır; dokununca beklemeden ba
 - `app.js` — harf verisi, oyunlar, ilerleme kaydı (tarayıcının yerel depolaması)
 - `sw.js`, `manifest.json`, `icon.svg` — çevrimdışı çalışma ve ana ekrana ekleme
 - `ses/` — isteğe bağlı kayıtlı harf sesleri
+- `sureler.js`, `sureler-veri.js` — Sureler bölümü ve sure metinleri (quran-json 3.1.2, CC BY-SA 4.0; Kral Fehd Mushaf Kompleksi Hafs metni)
+- `sure/` — hocanın sure kayıtları ve kelime zamanlamaları (`tools/sure-ekle.py` ile eklenir)
 - `bahce3d.js` — Yıldız Dükkanı'ndaki 3B bahçe (Three.js r128, cdnjs'ten yüklenir)
 - `tools/tek-dosya.py` — paylaşılabilir tek sayfa üretir
 - `tools/sesleri-ekle.py` — hocanın kayıtlarını `ses/` klasörüne ekler (ffmpeg gerekir)

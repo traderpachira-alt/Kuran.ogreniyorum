@@ -1,6 +1,6 @@
 // Basit çevrimdışı önbellek
-const CACHE = 'kuran-ogreniyorum-v14';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'bahce3d.js', 'manifest.json', 'icon.svg'];
+const CACHE = 'kuran-ogreniyorum-v15';
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'bahce3d.js', 'sureler.js', 'sureler-veri.js', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

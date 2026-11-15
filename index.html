@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Noto+Naskh+Arabic:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Baloo+2:wght@500;700;800&family=Noto+Naskh+Arabic:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -43,6 +43,7 @@
     </div>
 
     <div class="tiles">
+      <button class="tile t8 wide" data-go="sureler"><span class="emo">📜</span><span>Sureler</span></button>
       <button class="tile t0 wide" data-go="table"><span class="emo ar-emo">ت ب ا</span><span>Elif-Ba Tablosu</span></button>
       <button class="tile t1" data-go="learn"><span class="emo">📖</span><span>Harfleri Tanı</span></button>
       <button class="tile t2" data-go="find"><span class="emo">👂</span><span>Dinle ve Bul</span></button>
@@ -113,6 +114,27 @@
   <section class="screen" id="memory">
     <p class="ask">Aynı harfleri eşleştir!</p>
     <div class="cards" id="mGrid"></div>
+  </section>
+
+  <!-- SURELER -->
+  <section class="screen" id="sureler">
+    <p class="ask small">Hangi sureyi öğrenmek istersin?</p>
+    <div class="sure-list" id="sureList"></div>
+  </section>
+
+  <section class="screen" id="sure">
+    <div class="sure-top">
+      <button class="pill" id="sureBack">◀ Sureler</button>
+      <label class="sure-opt"><input type="checkbox" id="sureOkunus"> Okunuşu göster</label>
+    </div>
+    <p class="note rec-alert" id="sureNoAudio" hidden>Bu surenin sesi henüz eklenmedi. Hocanın kaydı eklenince sure sesli okunacak ve okundukça kelimeler belirginleşecek.</p>
+    <div class="sure-text" id="sureText"></div>
+    <p class="your-turn" id="sureYourTurn" hidden>🎤 Şimdi sen oku!</p>
+    <div class="sure-bar">
+      <button class="round-btn" id="sureRestart" aria-label="Baştan oku">⏮</button>
+      <button class="sure-play" id="surePlay" aria-label="Oku / durdur">▶</button>
+      <button class="pill" id="sureMode" aria-label="Birlikte oku">🔁 Birlikte oku</button>
+    </div>
   </section>
 
   <!-- ELİF-BA TABLOSU -->
@@ -225,5 +247,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="bahce3d.js"></script>
 <script src="app.js"></script>
+<script src="sureler-veri.js"></script>
+<script src="sureler.js"></script>
 </body>
 </html>
