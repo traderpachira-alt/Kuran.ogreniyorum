@@ -3,6 +3,7 @@
 Kullanım:
     python3 tools/sure-ekle.py 112 ihlas.m4a      # İhlâs
     python3 tools/sure-ekle.py 112 ihlas.m4a --son 12.68   # 12.68. saniyeden sonrasını at (gülme, konuşma vb.)
+    python3 tools/sure-ekle.py 108 kevser.mp3 --son 7.95 --besmelesiz   # kayıtta Besmele yok
     python3 tools/sure-ekle.py 108 kevser.mp3     # Kevser
     python3 tools/sure-ekle.py 105 fil.mp3        # Fil
 
@@ -178,7 +179,8 @@ def main():
         sys.exit(f'{no} numaralı sure listede yok. Var olanlar: {", ".join(TEXT)}')
     sure = TEXT[no]
     # okunacak satırlar: Besmele + ayetler (dualarda Besmele yok)
-    lines = ([] if sure.get('besmele') is False else [TEXT['besmele']]) + sure['ayetler']
+    no_besmele = sure.get('besmele') is False or '--besmelesiz' in sys.argv
+    lines = ([] if no_besmele else [TEXT['besmele']]) + sure['ayetler']
     base = f'{int(no):03d}' if no.isdigit() else no
     OUT.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
@@ -194,7 +196,7 @@ def main():
                  for d in (0.6, 0.5, 0.8, 0.45, 1.0, 0.35, 0.3, 0.25, 0.2)
                  for db in (-35, -32, -38, -30, -42, -28, -45)]
         found = None
-        wants = (len(lines), len(lines) + 1) if sure.get('besmele') is False else (len(lines), len(lines) + 1, len(lines) - 1)
+        wants = (len(lines), len(lines) + 1) if no_besmele else (len(lines), len(lines) + 1, len(lines) - 1)
         for want in wants:
             found = next(((p, d, db) for d, db, p in tries if len(p) == want), None)
             if found:
@@ -203,7 +205,7 @@ def main():
             sys.exit(f'Kayıt {len(lines)} parçaya bölünemedi. '
                      'Ayetler arasında yaklaşık 1 saniye durarak yeniden kaydedin.')
         parts, d, db = found
-        besmele = sure.get('besmele') is not False
+        besmele = not no_besmele
         if len(parts) == len(lines) + 1:
             print('Başta fazladan bir parça var (Eûzü olabilir); atlanıyor.')
             parts = parts[1:]

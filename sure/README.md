@@ -26,3 +26,5 @@ Sondaki fazlalığı atmak için `--son <saniye>` verilir.
 - `112.mp3` İhlâs: kullanıcının sağladığı "çocuk ezber" kaydı; Besmele + 4 ayet. Sondaki gülme sesi atıldı:
   `python3 tools/sure-ekle.py 112 ihlas.mp3 --son 13.24`. `112-075.mp3` ve `112-050.mp3` yavaş sürümler.
 - `subhaneke.mp3` Sübhâneke duası (namazda okunan biçim, "ve celle senâük" olmadan): kullanıcının sağladığı ezber kaydı; 4 satır.
+- `108.mp3` Kevser: kullanıcının sağladığı "3 tekrar ezber" kaydının ilk okunuşu (0–7,95 sn); kayıtta Besmele yok:
+  `python3 tools/sure-ekle.py 108 kevser.mp3 --son 7.95 --besmelesiz`.
