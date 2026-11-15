@@ -7,12 +7,13 @@
    app.js'teki yardımcıları kullanır ($, show, sfx, reward, getCtx, IS_IOS …).
    ========================================================= */
 
-const SURE_SIRA = ['112', '108', '105'];   // çocuklar için kısa olandan uzuna
+const SURE_SIRA = ['112', '108', '105', 'subhaneke'];   // sureler kısadan uzuna, sonra dualar
 const SM = window.SURE_METIN || {};
 const sureSes = {};      // no -> { timing, v: { '1' | '0.75' | '0.5': { raw: ArrayBuffer, buf: AudioBuffer|null } } }
 const HIZLAR = ['1', '0.75', '0.5'];
 let sureManifest = null;
 
+const sureAdi = s => `${s.ad} ${s.tur === 'dua' ? 'Duası' : 'Suresi'}`;
 const arDigits = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 
 async function loadSureAudio() {
@@ -112,9 +113,9 @@ function renderSureList() {
     const done = (S.sureDone || {})[no];
     const b = document.createElement('button');
     b.className = 'sure-card';
-    b.style.setProperty('--c', ['#7950f2', '#1c7ed6', '#e8590c'][k % 3]);
-    b.innerHTML = `<span class="sc-ar">${s.arapca}</span><span class="sc-tr">${s.ad} Suresi</span>
-      <span class="sc-info">${s.ayetler.length} ayet${done === today ? ' · ⭐ bugün tamam' : done ? ' · ✔ okundu' : ''}</span>
+    b.style.setProperty('--c', ['#7950f2', '#1c7ed6', '#e8590c', '#2b8a3e'][k % 4]);
+    b.innerHTML = `<span class="sc-ar">${s.arapca}</span><span class="sc-tr">${sureAdi(s)}</span>
+      <span class="sc-info">${s.ayetler.length} ${s.tur === 'dua' ? 'satır' : 'ayet'}${done === today ? ' · ⭐ bugün tamam' : done ? ' · ✔ okundu' : ''}</span>
       ${sureSes[no] ? '' : '<span class="sc-wait">Ses bekleniyor</span>'}`;
     b.onclick = () => openSure(no);
     g.appendChild(b);
@@ -128,12 +129,12 @@ function openSure(no) {
   show('sure');
   SR.no = no; SR.line = -1; SR.stopAt = null; SR.waitUntil = 0; SR.nextFrom = null;
   const s = SM[no];
-  $('title').textContent = `${s.ad} Suresi`;
+  $('title').textContent = sureAdi(s);
   const t = sureSes[no] && sureSes[no].timing;
   SR.timing = t || null;
-  const withBesmele = !t || t.besmele;
+  const withBesmele = s.besmele !== false && (!t || t.besmele);
   SR.lines = (withBesmele ? [{ text: SM.besmele, ok: SM.besmeleOkunus, besmele: true }] : [])
-    .concat(s.ayetler.map((a, k) => ({ text: a, ok: s.okunus[k], n: k + 1 })));
+    .concat(s.ayetler.map((a, k) => ({ text: a, ok: s.okunus[k], n: s.tur === 'dua' ? 0 : k + 1 })));
   const box = $('sureText'); box.innerHTML = '';
   SR.cache = [];
   SR.lines.forEach((ln, li) => {
@@ -234,7 +235,7 @@ function sureFinished() {
   S.sureDone = S.sureDone || {};
   if (S.sureDone[SR.no] !== today) {                 // her sure günde bir kez yıldız verir
     S.sureDone[SR.no] = today; save();
-    reward(`${SM[SR.no].ad} Suresi tamam!`, () => { $('reward').hidden = true; sureRestart(); }, 3);
+    reward(`${sureAdi(SM[SR.no])} tamam!`, () => { $('reward').hidden = true; sureRestart(); }, 3);
   } else {
     S.sureDone[SR.no] = today; save();
     sfx.win(); confetti(40); praise();

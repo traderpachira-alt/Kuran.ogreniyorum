@@ -1,6 +1,6 @@
-// Sure metinleri (Kur'an Öğreniyorum). tools/sure-ekle.py de bu dosyayı okur.
+// Sure ve dua metinleri (Kur'an Öğreniyorum). tools/sure-ekle.py de bu dosyayı okur.
 window.SURE_METIN = {
- "kaynak": "Kur'an metni: quran-json 3.1.2 (Risan Bagja Pradana, CC BY-SA 4.0), Kral Fehd Mushaf Kompleksi Medine (Hafs) Osmanî yazısı; açık kesreteyn (U+0656) standart kesreteyne çevrildi.",
+ "kaynak": "Kur'an metni: quran-json 3.1.2 (Risan Bagja Pradana, CC BY-SA 4.0), Kral Fehd Mushaf Kompleksi Medine (Hafs) Osmanî yazısı; açık kesreteyn (U+0656) standart kesreteyne çevrildi. Sübhâneke duası metni ve okunuşu uygulama için yazıldı (namazda okunan biçim).",
  "besmele": "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
  "besmeleOkunus": "Bismillâhirrahmânirrahîm.",
  "112": {
@@ -50,5 +50,24 @@ window.SURE_METIN = {
    "Termîhim bi hıcâratin min siccîl.",
    "Fece'alehüm ke'asfin me'kûl."
   ]
+ },
+ "subhaneke": {
+  "ad": "Sübhâneke",
+  "tur": "dua",
+  "besmele": false,
+  "arapca": "سُبْحَانَكَ",
+  "ayetler": [
+   "سُبْحَانَكَ اللّٰهُمَّ وَبِحَمْدِكَ",
+   "وَتَبَارَكَ اسْمُكَ",
+   "وَتَعَالٰى جَدُّكَ",
+   "وَلَا اِلٰهَ غَيْرُكَ"
+  ],
+  "okunus": [
+   "Sübhânekellâhümme ve bihamdik",
+   "Ve tebârakesmük",
+   "Ve teâlâ ceddük",
+   "Ve lâ ilâhe ğayrük."
+  ],
+  "not": "Namazda okunan biçim (Diyanet). \"Ve celle senâük\" yalnızca cenaze namazında eklenir."
  }
 };

@@ -42,7 +42,7 @@ LETTERS.forEach(L => { L.ar = L.c + FATHA; L.cf = L.c + FATHA; });   // üstünl
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '18 (15.11.2026)';
+const VERSION = '19 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -336,7 +336,7 @@ function renderDots(el, total, filled) {
 const TITLES = {
   home: "Kur'an Öğreniyorum", learn: 'Harfleri Tanı', find: 'Dinle ve Bul', trace: 'Harf Çiz',
   balloon: 'Balon Patlat', memory: 'Hafıza Kartları', garden: 'Harf Bahçem', parent: 'Anne-Baba',
-  table: 'Elif-Ba Tablosu', record: 'Harf Seslerim', shop: 'Yıldız Dükkanı', sureler: 'Sureler', sure: 'Sure',
+  table: 'Elif-Ba Tablosu', record: 'Harf Seslerim', shop: 'Yıldız Dükkanı', sureler: 'Sureler ve Dualar', sure: 'Sure',
 };
 let current = 'home';
 let replay = null; // ödül ekranındaki "Tekrar" ne yapacak

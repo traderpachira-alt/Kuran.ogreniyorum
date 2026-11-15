@@ -177,7 +177,9 @@ def main():
     if no not in TEXT:
         sys.exit(f'{no} numaralı sure listede yok. Var olanlar: {", ".join(TEXT)}')
     sure = TEXT[no]
-    lines = [TEXT['besmele']] + sure['ayetler']            # okunacak satırlar: Besmele + ayetler
+    # okunacak satırlar: Besmele + ayetler (dualarda Besmele yok)
+    lines = ([] if sure.get('besmele') is False else [TEXT['besmele']]) + sure['ayetler']
+    base = f'{int(no):03d}' if no.isdigit() else no
     OUT.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         wav = pathlib.Path(tmp) / 's.wav'
@@ -192,15 +194,16 @@ def main():
                  for d in (0.6, 0.5, 0.8, 0.45, 1.0, 0.35, 0.3, 0.25, 0.2)
                  for db in (-35, -32, -38, -30, -42, -28, -45)]
         found = None
-        for want in (len(lines), len(lines) + 1, len(lines) - 1):
+        wants = (len(lines), len(lines) + 1) if sure.get('besmele') is False else (len(lines), len(lines) + 1, len(lines) - 1)
+        for want in wants:
             found = next(((p, d, db) for d, db, p in tries if len(p) == want), None)
             if found:
                 break
         if not found:
-            sys.exit(f'Kayıt {len(lines)} parçaya (Besmele + {len(sure["ayetler"])} ayet) bölünemedi. '
+            sys.exit(f'Kayıt {len(lines)} parçaya bölünemedi. '
                      'Ayetler arasında yaklaşık 1 saniye durarak yeniden kaydedin.')
         parts, d, db = found
-        besmele = True
+        besmele = sure.get('besmele') is not False
         if len(parts) == len(lines) + 1:
             print('Başta fazladan bir parça var (Eûzü olabilir); atlanıyor.')
             parts = parts[1:]
@@ -215,11 +218,11 @@ def main():
             a, b = refine(env, a, b)
             words = line.split()
             segs.append({'s': round(a, 3), 'e': round(b, 3), 'w': word_times(words, a, b, env)})
-        out_mp3 = OUT / f'{int(no):03d}.mp3'
+        out_mp3 = OUT / f'{base}.mp3'
         run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(wav), '-c:a', 'libmp3lame', '-b:a', '64k', str(out_mp3)])
         speeds = {'1': out_mp3.name}
         for rate in (0.75, 0.5):        # perdeyi koruyarak yavaşlat (rubberband; yoksa atempo)
-            name = f'{int(no):03d}-{int(rate * 100):03d}.mp3'
+            name = f'{base}-{int(rate * 100):03d}.mp3'
             r = run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(wav), '-af', f'rubberband=tempo={rate}:pitchq=quality',
                      '-c:a', 'libmp3lame', '-b:a', '64k', str(OUT / name)])
             if r.returncode != 0:
@@ -232,7 +235,7 @@ def main():
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
     print(f'{sure["ad"]} eklendi: {out_mp3.name}, {len(segs)} satır.')
     for k, s in enumerate(segs):
-        print(f'  {"Besmele" if besmele and k == 0 else "Ayet " + str(k + (0 if besmele else 1))}: {s["s"]:.2f}–{s["e"]:.2f} sn, {len(s["w"])} kelime')
+        print(f'  {"Besmele" if besmele and k == 0 else "Satır " + str(k + (0 if besmele else 1))}: {s["s"]:.2f}–{s["e"]:.2f} sn, {len(s["w"])} kelime')
 
 
 if __name__ == '__main__':
