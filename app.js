@@ -42,7 +42,7 @@ LETTERS.forEach(L => { L.ar = L.c + FATHA; L.cf = L.c + FATHA; });   // üstünl
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '21 (15.11.2026)';
+const VERSION = '22 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -237,22 +237,29 @@ const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platfo
 /** Bir kaydı en güvenilir yolla çalar: Web Audio açıksa onunla, değilse ses dosyası olarak, o da olmazsa yapay sesle. */
 function playSound(buf, raw, fallback) {
   const c = getCtx();
+  const gen = playGen;
+  // Gecikmeli yedek yollar, bu arada başka bir ses başlatıldıysa (hush çağrıldıysa) hiçbir şey çalmaz.
+  const live = fn => () => (gen === playGen ? fn() : undefined);
+  const viaBuffer = live(() => (c.state === 'running' ? playBuffer(buf) : fallback()));
   if (buf && c.state === 'running' && !(IS_IOS && raw)) return playBuffer(buf);
   if (raw) {
-    return playUrl(rawUrl(raw)).catch(() => {
-      if (buf) return c.resume().then(() => (c.state === 'running' ? playBuffer(buf) : fallback()), fallback);
+    return playUrl(rawUrl(raw)).catch(live(() => {
+      if (buf) return c.resume().then(viaBuffer, live(fallback));
       return fallback();
-    });
+    }));
   }
-  if (buf) return c.resume().then(() => (c.state === 'running' ? playBuffer(buf) : fallback()), fallback);
+  if (buf) return c.resume().then(viaBuffer, live(fallback));
   return fallback();
 }
+let playGen = 0;     // her hush() ile artar: eski seslerin geç kalmış devamları susar
 function hush() {
+  playGen++;
   try { speechSynthesis.cancel(); } catch (e) { /* yoksay */ }
   if (clip) { clip.pause(); clip = null; }
   if (srcNode) { const s = srcNode; srcNode = null; try { s.onended = null; s.stop(); } catch (e) { /* yoksay */ } if (s._done) s._done(); }
 }
 function sayLetter(i) {
+  hush();                                   // aynı anda tek harf sesi: öncekini kes
   const L = LETTERS[i], r = RATES[S.settings.speed] || RATES.slow;
   const tts = () => { lastPath = 'yapay ses'; return (S.settings.voice === 'ar' && hasArabic()) ? speak(L.ar, 'ar', r.ar) : speak(L.tr, 'tr', r.tr); };
   if (recRaw[i]) return playSound(recBuf[i], recRaw[i], tts);    // ebeveynin sesi her zaman önce gelir
