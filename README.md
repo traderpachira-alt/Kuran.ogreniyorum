@@ -18,7 +18,7 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 - **Büyük dokunma alanları:** Tüm düğmeler küçük parmaklar için en az 56 px.
 - **Ceza yok, hep teşvik var:** Yanlış cevapta kart sallanır ve harf tekrar okunur; doğru cevapta konfeti, "Aferin!", "Maşallah!" gibi sesli övgüler ve yıldızlar gelir.
 - **Kısa oturumlar:** Her oyun 1–2 dakikada biter ve bir ödül ekranıyla kapanır.
-- **Hak edilen yıldız:** Oyun sonunda hata sayısına göre 1–3 yıldız verilir (Dinle ve Bul ile Balon Patlat'ta hatasız 3, 1–2 hatada 2, daha fazlasında 1; Hafıza Kartları'nda çift sayısı kadar yanlış eşleşmeye kadar 3). Dinle ve Bul'da tur yıldızı ve harfin "biliyor" puanı yalnızca ilk denemede doğru bilinince verilir. Yıldız hiçbir zaman geri alınmaz.
+- **Hak edilen yıldız:** Yıldız yalnızca bir bölüm tamamlanınca, başarıya göre 1–3 olarak verilir; tek tek doğru cevaplar ya da harf görmek yıldız vermez. Dinle ve Bul ve Balon Patlat'ta hatasız 3, 1–2 hatada 2, daha fazlasında 1; Hafıza Kartları'nda çift sayısı kadar yanlış eşleşmeye kadar 3; Harf Çiz'de 3 harflik turda silgi kullanımı ve çok taşan çizimler hata sayılır. Yıldız hiçbir zaman geri alınmaz.
 - **Adım adım ilerleme:** Oyunlar, çocuğun *Harfleri Tanı* bölümünde gördüğü harflerle oynanır (en az 4 harf). Böylece yeni harfler zorlamadan, sırayla eklenir.
 - **Çocuğa adıyla seslenme:** Anne-Baba bölümüne çocuğun adı yazılırsa Hilal övgü ve yönergelerde ona adıyla seslenir (övgülerde "Aferin, Ayşe!", yönergelerde "Ayşe, bul bakalım!"). Ad, Türkçe ek gerektirmeyecek şekilde hitap olarak eklenir; tekdüze olmasın diye bazı cümlelerde kullanılır. Ad yalnızca o cihazda saklanır.
 - **Ebeveyn kilidi:** Ayarlar, basit bir toplama sorusunun arkasındadır.
@@ -29,11 +29,11 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 |---|---|---|
 | 📖 **Harfleri Tanı** | Harfin şekli ve adı | Büyük harf kartı; dokununca harf okunur. Altında harfi hatırlatan ipucu yer alır ("Altında 1 nokta" gibi). |
 | 👂 **Dinle ve Bul** | Sesi şekille eşleştirme | Harf okunur, çocuk 3–4 seçenekten doğrusunu seçer. 6 tur. |
-| ✏️ **Harf Çiz** | Harfin yazılışı, ince motor beceri | Parmakla kesikli çizgili harfin üstünden geçilir; kalem rengini çocuk seçer (9 renk ve gökkuşağı). Uygulama çizimin harfi ne kadar kapladığını ölçer ve yeterince iyiyse kutlar. |
+| ✏️ **Harf Çiz** | Harfin yazılışı, ince motor beceri | Parmakla kesikli çizgili harfin üstünden geçilir; kalem rengini çocuk seçer (9 renk ve gökkuşağı). Harfin gövdesi ve her noktası ayrı ayrı kontrol edilir; nokta eksikse "Noktaları da unutma!" denir. Bir tur 3 harftir. Uygulama çizimin harfi ne kadar kapladığını ölçer ve yeterince iyiyse kutlar. |
 | 🎈 **Balon Patlat** | Hızlı tanıma | Yükselen balonlardan hedef harfi taşıyanları patlat. 5 balon. |
 | 🧩 **Hafıza Kartları** | Görsel hafıza | Kartları çevir, aynı harfleri eşleştir (3–4 çift). |
 | 🌷 **Harf Bahçem** | İlerlemeyi görmek | 28 harf; görülen harfler 🌱 filiz, en az 3 kez doğru bilinen harfler 🌸 çiçek olur. |
-| 🎁 **Yıldız Dükkanı** | Motivasyon | Oyunlarda kazanılan yıldızlarla çıkartma alınır ve "Benim Dünyam" sahnesine parmakla yerleştirilir; Hilal'e taç, şapka gibi süsler alınır. Fiyatlar 5–30 yıldız; yetmeyen yıldız çubukla gösterilir ve "… yıldız daha topla!" diye söylenir. |
+| 🎁 **Yıldız Dükkanı** | Motivasyon | Oyunlarda kazanılan yıldızlarla çıkartma alınır ve "Benim Dünyam" sahnesine parmakla yerleştirilir; Hilal'e taç, şapka gibi süsler alınır. Fiyatlar 2–15 yıldız; yetmeyen yıldız çubukla gösterilir ve "… yıldız daha topla!" diye söylenir. |
 | 🔤 **Elif-Ba Tablosu** | Harflerin okunuşu | 28 harf tek ekranda; hangisine dokunulursa o harf okunur. Serbest keşif içindir.
 
 ## Ses

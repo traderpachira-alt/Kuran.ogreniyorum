@@ -42,7 +42,7 @@ LETTERS.forEach(L => { L.ar = L.c + FATHA; L.cf = L.c + FATHA; });   // üstünl
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '10 (15.11.2026)';
+const VERSION = '11 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -70,7 +70,7 @@ function addStars(n = 1) {
   $('starNum').textContent = S.stars;
   const el = $('starCount'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
 }
-function markSeen(i) { if (!S.seen.includes(i)) { S.seen.push(i); addStars(1); } }
+function markSeen(i) { if (!S.seen.includes(i)) { S.seen.push(i); save(); } }
 function scoreUp(i) { S.score[i] = (S.score[i] || 0) + 1; save(); }
 
 /** Oyunlarda kullanılacak harfler: çocuğun gördüğü harfler (en az 4). */
@@ -396,7 +396,7 @@ function pickFind(btn, i) {
   if (i === fg.target) {
     fg.locked = true;
     btn.classList.add('right'); sfx.ok(); confetti(25); praise();
-    if (!fg.missThis) { scoreUp(i); addStars(1); }   // yıldız ve "biliyor" puanı yalnızca ilk denemede
+    if (!fg.missThis) scoreUp(i);   // "biliyor" puanı yalnızca ilk denemede doğru bilinince
 
     fg.round++; renderDots($('fDots'), FIND_ROUNDS, fg.round);
     setTimeout(() => { if (current === 'find') nextFind(); }, 1500);
@@ -427,12 +427,15 @@ function renderPens() {
     box.appendChild(b);
   });
 }
-const tg = { idx: 0, drawing: false, last: null, done: false, size: 0, brush: 0, hue: 0 };
+const tg = { idx: 0, drawing: false, last: null, done: false, size: 0, brush: 0, hue: 0, round: 0, miss: 0, hinted: false, drew: false };
 const guide = $('tGuide'), draw = $('tDraw');
 const gctx = guide.getContext('2d'), dctx = draw.getContext('2d');
 
+const TRACE_ROUNDS = 3;
 function startTrace(i) {
   show('trace');
+  tg.round = 0; tg.miss = 0; tg.hinted = false;
+  renderDots($('tDots'), TRACE_ROUNDS, 0);
   if (i === undefined) { const p = pool(); i = p.includes(tg.idx) ? tg.idx : p[0]; }
   tg.idx = i;
   setupTrace();
@@ -452,6 +455,7 @@ async function setupTrace() {
   tg.brush = Math.max(22, tg.size * 0.09);
   drawGuide(gctx, tg.size, L.c, true);
   dctx.clearRect(0, 0, tg.size, tg.size);
+  tg.drew = false;
   hush(); sayLetter(tg.idx);
 }
 /** Harfi kutunun ortasına, kutunun ~%70'ini dolduracak şekilde yerleştirir. */
@@ -487,7 +491,7 @@ function pos(e) { const r = draw.getBoundingClientRect(); return { x: e.clientX 
 draw.addEventListener('pointerdown', e => {
   if (tg.done) return;
   draw.setPointerCapture(e.pointerId);
-  tg.drawing = true; tg.last = pos(e);
+  tg.drawing = true; tg.drew = true; tg.last = pos(e);
   dot(tg.last);
 });
 draw.addEventListener('pointermove', e => {
@@ -506,7 +510,27 @@ function dot(p) {
   dctx.fillStyle = penColor(); dctx.globalAlpha = 0.8;
   dctx.beginPath(); dctx.arc(p.x, p.y, tg.brush / 2, 0, Math.PI * 2); dctx.fill(); dctx.globalAlpha = 1;
 }
-/** Çizimin harfin ne kadarını kapladığını küçük bir tuvalde ölçer. */
+/** Harfin parçalarını (gövde ve her nokta ayrı) bulur: küçük tuvalde bağlı bölgeler. */
+function letterParts(mask, N) {
+  const lab = new Int16Array(N * N), parts = [];
+  for (let p = 0; p < N * N; p++) {
+    if (lab[p] || mask[p * 4 + 3] <= 100) continue;
+    const id = parts.length + 1, stack = [p], px = [];
+    lab[p] = id;
+    while (stack.length) {
+      const q = stack.pop(); px.push(q);
+      const x = q % N, y = (q / N) | 0;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = x + dx, ny = y + dy, n = ny * N + nx;
+        if (nx < 0 || ny < 0 || nx >= N || ny >= N || lab[n] || mask[n * 4 + 3] <= 100) continue;
+        lab[n] = id; stack.push(n);
+      }
+    }
+    if (px.length >= 3) parts.push(px);       // kenar kırıntılarını yok say
+  }
+  return parts;
+}
+/** Çizimi ölçer: harfin her parçası (noktalar dahil) yeterince boyanmış ve taşma az olmalı. */
 function checkTrace() {
   const N = 120, scale = N / tg.size;
   const m = document.createElement('canvas'); m.width = m.height = N;
@@ -521,30 +545,39 @@ function checkTrace() {
   mc.setTransform(1, 0, 0, 1, 0, 0); mc.clearRect(0, 0, N, N);
   mc.drawImage(draw, 0, 0, N, N);
   const ink = mc.getImageData(0, 0, N, N).data;
-  let letterPx = 0, covered = 0, inkPx = 0, outside = 0;
-  for (let k = 3; k < mask.length; k += 4) {
-    const isL = mask[k] > 100, isI = ink[k] > 60;
-    if (isL) { letterPx++; if (isI) covered++; }
-    if (isI) { inkPx++; if (near[k] < 60) outside++; }
-  }
-  const coverage = letterPx ? covered / letterPx : 0;
+  let inkPx = 0, outside = 0;
+  for (let k = 3; k < ink.length; k += 4) if (ink[k] > 60) { inkPx++; if (near[k] < 60) outside++; }
   const messy = inkPx ? outside / inkPx : 0;
-  if (coverage > 0.6 && messy < 0.3) traceSuccess();
+  const parts = letterParts(mask, N).sort((a, b) => b.length - a.length);
+  const cover = px => px.filter(p => ink[p * 4 + 3] > 60).length / px.length;
+  const body = parts.length ? cover(parts[0]) : 0;
+  const smallOk = parts.slice(1).every(px => cover(px) >= 0.5);   // noktalar ve küçük işaretler
+  if (body > 0.6 && smallOk && messy < 0.3) return traceSuccess(messy);
+  if (body > 0.6 && !smallOk && messy < 0.3 && !tg.hinted) {        // gövde bitti, nokta eksik
+    tg.hinted = true; hush(); speak(nameFirst('Noktaları da unutma!', 0.5), 'tr');
+  }
 }
-function traceSuccess() {
+function traceSuccess(messy) {
   tg.done = true;
+  if (messy > 0.18) tg.miss++;              // çok taşan çizim tam puan almaz
   $('tBox').classList.add('done');
   sfx.ok(); confetti(40); praise();
-  scoreUp(tg.idx); addStars(2);
-  setTimeout(() => { if (current === 'trace' && tg.done) nextTrace(); }, 2200);
+  scoreUp(tg.idx);
+  tg.round++; renderDots($('tDots'), TRACE_ROUNDS, tg.round);
+  setTimeout(() => {
+    if (current !== 'trace' || !tg.done) return;
+    if (tg.round >= TRACE_ROUNDS) reward('Harika çizdin!', () => startTrace(), starsFor(tg.miss, 0, 2));
+    else nextTrace();
+  }, 2000);
 }
 function nextTrace() {
+  tg.hinted = false;
   const p = pool();
   const k = p.indexOf(tg.idx);
   tg.idx = p[(k + 1) % p.length];
   setupTrace();
 }
-$('tClear').onclick = () => { dctx.clearRect(0, 0, tg.size, tg.size); tg.done = false; $('tBox').classList.remove('done'); };
+$('tClear').onclick = () => { if (tg.done) return; dctx.clearRect(0, 0, tg.size, tg.size); if (tg.drew) tg.miss++; tg.drew = false; tg.hinted = false; };
 $('tNext').onclick = nextTrace;
 $('tSpeak').onclick = () => { hush(); sayLetter(tg.idx); };
 window.addEventListener('resize', () => { if (current === 'trace') setupTrace(); });
@@ -597,7 +630,7 @@ function tapBalloon(b) {
   if (b.i === bg.target) {
     b.dead = true; b.el.classList.add('popped'); sfx.pop(); setTimeout(() => sfx.ok(), 80);
     setTimeout(() => b.el.remove(), 320);
-    bg.hits++; scoreUp(b.i); addStars(1);
+    bg.hits++; scoreUp(b.i);
     renderDots($('bDots'), BALLOON_GOAL, bg.hits);
     if (bg.hits >= BALLOON_GOAL) { stopBalloon(); setTimeout(() => reward('Balon ustası!', startBalloon, starsFor(bg.miss, 0, 2)), 500); }
     else { hush(); sayLetter(b.i); }
@@ -642,7 +675,7 @@ function flipCard(c) {
   setTimeout(() => {
     if (a.dataset.i === b.dataset.i) {
       a.classList.replace('open', 'match'); b.classList.replace('open', 'match');
-      sfx.ok(); confetti(20); scoreUp(i); addStars(1);
+      sfx.ok(); confetti(20); scoreUp(i);
       mg.matched++;
       if (mg.matched === mg.pairs) setTimeout(() => reward('Hafızan çok güçlü!', startMemory, starsFor(mg.miss, mg.pairs, mg.pairs * 2)), 600);
       else praise();
@@ -677,17 +710,17 @@ function openTable() {
 
 // ---------- 8) Yıldız Dükkanı: yıldızları harca, dünyanı süsle ----------
 const SHOP = [
-  { id: 'cloud', e: '☁️', p: 5 }, { id: 'chick', e: '🐥', p: 5 }, { id: 'bug', e: '🐞', p: 5 },
-  { id: 'flower', e: '🌸', p: 6 }, { id: 'apple', e: '🍎', p: 6 }, { id: 'straw', e: '🍓', p: 6 },
-  { id: 'fly', e: '🦋', p: 7 }, { id: 'balloon', e: '🎈', p: 8 }, { id: 'turtle', e: '🐢', p: 8 },
-  { id: 'fish', e: '🐟', p: 8 }, { id: 'bunny', e: '🐰', p: 10 }, { id: 'cat', e: '🐱', p: 10 },
-  { id: 'sunfl', e: '🌻', p: 10 }, { id: 'tree', e: '🌳', p: 12 }, { id: 'sheep', e: '🐑', p: 12 },
-  { id: 'moon', e: '🌙', p: 12 }, { id: 'camel', e: '🐪', p: 15 }, { id: 'rainbow', e: '🌈', p: 15 },
-  { id: 'house', e: '🏡', p: 20 }, { id: 'mosque', e: '🕌', p: 25 },
+  { id: 'cloud', e: '☁️', p: 2 }, { id: 'chick', e: '🐥', p: 2 }, { id: 'bug', e: '🐞', p: 2 },
+  { id: 'flower', e: '🌸', p: 3 }, { id: 'apple', e: '🍎', p: 3 }, { id: 'straw', e: '🍓', p: 3 },
+  { id: 'fly', e: '🦋', p: 3 }, { id: 'balloon', e: '🎈', p: 4 }, { id: 'turtle', e: '🐢', p: 4 },
+  { id: 'fish', e: '🐟', p: 4 }, { id: 'bunny', e: '🐰', p: 5 }, { id: 'cat', e: '🐱', p: 5 },
+  { id: 'sunfl', e: '🌻', p: 5 }, { id: 'tree', e: '🌳', p: 6 }, { id: 'sheep', e: '🐑', p: 6 },
+  { id: 'moon', e: '🌙', p: 6 }, { id: 'camel', e: '🐪', p: 8 }, { id: 'rainbow', e: '🌈', p: 8 },
+  { id: 'house', e: '🏡', p: 10 }, { id: 'mosque', e: '🕌', p: 12 },
 ];
 const HATS = [
-  { id: 'bow', e: '🎀', p: 10 }, { id: 'daisy', e: '🌼', p: 12 }, { id: 'cap', e: '🧢', p: 15 },
-  { id: 'tophat', e: '🎩', p: 20 }, { id: 'crown', e: '👑', p: 30 },
+  { id: 'bow', e: '🎀', p: 5 }, { id: 'daisy', e: '🌼', p: 6 }, { id: 'cap', e: '🧢', p: 8 },
+  { id: 'tophat', e: '🎩', p: 10 }, { id: 'crown', e: '👑', p: 15 },
 ];
 const SCENE_MAX = 40;
 let shopTab = 'sticker';
