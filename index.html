@@ -94,6 +94,7 @@
       <canvas id="tGuide"></canvas>
       <canvas id="tDraw"></canvas>
     </div>
+    <div class="pens" id="tPens" role="group" aria-label="Kalem rengi"></div>
     <p class="ask small">Parmağınla harfin üstünden geç!</p>
   </section>
 
@@ -206,8 +207,9 @@
 <!-- Ödül -->
 <div class="overlay" id="reward" hidden>
   <div class="modal reward">
-    <div class="big-stars">⭐⭐⭐</div>
+    <div class="big-stars" id="rStars">⭐⭐⭐</div>
     <p class="r-title" id="rTitle">Harika!</p>
+    <p class="r-hint" id="rHint"></p>
     <div class="r-btns">
       <button class="pill big" id="rAgain">🔁 Tekrar</button>
       <button class="pill big" id="rHome">🏠</button>

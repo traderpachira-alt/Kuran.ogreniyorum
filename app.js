@@ -39,7 +39,7 @@ const LETTERS = [
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '7 (15.11.2026)';
+const VERSION = '8 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -275,12 +275,21 @@ function go(id) {
   if (id === 'shop') return openShop();
 }
 
-function reward(title, againFn) {
+/** Oyun sonu ödülü. Hata sayısına göre 1-3 yıldız: ok = hatasız sınır, good = 2 yıldız sınırı. */
+function starsFor(mistakes, ok, good) { return mistakes <= ok ? 3 : mistakes <= good ? 2 : 1; }
+function reward(title, againFn, stars = 3) {
   replay = againFn;
-  sfx.win(); confetti(70); addStars(3);
-  $('rTitle').textContent = title || rand(PRAISE);
+  sfx.win(); confetti(stars === 3 ? 70 : stars === 2 ? 40 : 20); addStars(stars);
+  $('rStars').innerHTML = [1, 2, 3].map(k => `<span class="${k <= stars ? 'on' : 'off'}">⭐</span>`).join('');
+  $('rTitle').textContent = stars === 3 ? (title || rand(PRAISE)) : stars === 2 ? 'Çok iyi!' : 'Güzel deneme!';
+  $('rHint').textContent = stars === 3 ? '' : 'Daha az hata yaparsan 3 yıldız kazanırsın!';
   $('reward').hidden = false;
-  speak(withName('Tebrikler!') + ' Üç yıldız kazandın!', 'tr');
+  const say = {
+    3: withName('Tebrikler!') + ' Üç yıldız kazandın!',
+    2: withName('Çok iyi!') + ' İki yıldız kazandın! Daha dikkatli olursan üç yıldız kazanırsın.',
+    1: withName('Güzel deneme!') + ' Bir yıldız kazandın. Hadi bir daha deneyelim, daha çok yıldız kazanalım!',
+  }[stars];
+  speak(say, 'tr');
 }
 
 // ---------- 1) Harfleri Tanı ----------
@@ -307,10 +316,10 @@ $('lTrace').onclick = () => startTrace(li);
 
 // ---------- 2) Dinle ve Bul ----------
 const FIND_ROUNDS = 6;
-const fg = { round: 0, target: 0, locked: false };
-function startFind() { fg.round = 0; show('find'); nextFind(); }
+const fg = { round: 0, target: 0, locked: false, miss: 0, missThis: false };
+function startFind() { fg.round = 0; fg.miss = 0; show('find'); nextFind(); }
 function nextFind() {
-  if (fg.round >= FIND_ROUNDS) return reward('Kulakların çok iyi!', startFind);
+  if (fg.round >= FIND_ROUNDS) return reward('Kulakların çok iyi!', startFind, starsFor(fg.miss, 0, 2));
   const p = pool();
   const n = p.length >= 8 ? 4 : 3;
   fg.target = rand(p);
@@ -327,7 +336,7 @@ function nextFind() {
     $('fOpts').appendChild(b);
   });
   renderDots($('fDots'), FIND_ROUNDS, fg.round);
-  fg.locked = false;
+  fg.locked = false; fg.missThis = false;
   promptFind();
 }
 async function promptFind() { hush(); await speak(withName('Bul bakalım!', 0.5), 'tr'); if (current === 'find') sayLetter(fg.target); }
@@ -337,17 +346,38 @@ function pickFind(btn, i) {
   if (i === fg.target) {
     fg.locked = true;
     btn.classList.add('right'); sfx.ok(); confetti(25); praise();
-    scoreUp(i); addStars(1);
+    if (!fg.missThis) { scoreUp(i); addStars(1); }   // yıldız ve "biliyor" puanı yalnızca ilk denemede
+
     fg.round++; renderDots($('fDots'), FIND_ROUNDS, fg.round);
     setTimeout(() => { if (current === 'find') nextFind(); }, 1500);
   } else {
     replayAnim(btn, 'wrong'); sfx.no();
+    fg.miss++; fg.missThis = true;
     hush(); setTimeout(() => sayLetter(fg.target), 350);
   }
 }
 
 // ---------- 3) Harf Çiz ----------
-const tg = { idx: 0, drawing: false, last: null, done: false, size: 0, brush: 0 };
+const PENS = ['#fa5252', '#fd7e14', '#fcc419', '#40c057', '#15aabf', '#228be6', '#7950f2', '#e64980', '#8d5524', 'rainbow'];
+const PEN_NAMES = { '#fa5252': 'Kırmızı', '#fd7e14': 'Turuncu', '#fcc419': 'Sarı', '#40c057': 'Yeşil', '#15aabf': 'Turkuaz', '#228be6': 'Mavi', '#7950f2': 'Mor', '#e64980': 'Pembe', '#8d5524': 'Kahverengi', rainbow: 'Gökkuşağı' };
+function penColor() {
+  const p = S.settings.pen || 'rainbow';
+  if (p !== 'rainbow') return p;
+  tg.hue = (tg.hue + 4) % 360;                      // çizdikçe renk değişir
+  return `hsl(${tg.hue}, 85%, 55%)`;
+}
+function renderPens() {
+  const box = $('tPens'); box.innerHTML = '';
+  PENS.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'pen' + ((S.settings.pen || 'rainbow') === p ? ' on' : '') + (p === 'rainbow' ? ' rainbow' : '');
+    if (p !== 'rainbow') b.style.background = p;
+    b.setAttribute('aria-label', PEN_NAMES[p] + ' kalem');
+    b.onclick = () => { S.settings.pen = p; save(); sfx.flip(); renderPens(); };
+    box.appendChild(b);
+  });
+}
+const tg = { idx: 0, drawing: false, last: null, done: false, size: 0, brush: 0, hue: 0 };
 const guide = $('tGuide'), draw = $('tDraw');
 const gctx = guide.getContext('2d'), dctx = draw.getContext('2d');
 
@@ -358,6 +388,7 @@ function startTrace(i) {
   setupTrace();
 }
 async function setupTrace() {
+  renderPens();
   const L = LETTERS[tg.idx];
   $('tName').textContent = L.tr;
   $('tName').style.color = colorOf(tg.idx);
@@ -412,7 +443,7 @@ draw.addEventListener('pointerdown', e => {
 draw.addEventListener('pointermove', e => {
   if (!tg.drawing) return;
   const p = pos(e);
-  dctx.strokeStyle = colorOf(tg.idx); dctx.lineWidth = tg.brush; dctx.lineCap = 'round'; dctx.lineJoin = 'round';
+  dctx.strokeStyle = penColor(); dctx.lineWidth = tg.brush; dctx.lineCap = 'round'; dctx.lineJoin = 'round';
   dctx.globalAlpha = 0.8;
   dctx.beginPath(); dctx.moveTo(tg.last.x, tg.last.y); dctx.lineTo(p.x, p.y); dctx.stroke();
   dctx.globalAlpha = 1;
@@ -422,7 +453,7 @@ const endStroke = () => { if (tg.drawing) { tg.drawing = false; checkTrace(); } 
 draw.addEventListener('pointerup', endStroke);
 draw.addEventListener('pointercancel', endStroke);
 function dot(p) {
-  dctx.fillStyle = colorOf(tg.idx); dctx.globalAlpha = 0.8;
+  dctx.fillStyle = penColor(); dctx.globalAlpha = 0.8;
   dctx.beginPath(); dctx.arc(p.x, p.y, tg.brush / 2, 0, Math.PI * 2); dctx.fill(); dctx.globalAlpha = 1;
 }
 /** Çizimin harfin ne kadarını kapladığını küçük bir tuvalde ölçer. */
@@ -473,7 +504,7 @@ const BALLOON_GOAL = 5;
 const bg = { target: 0, hits: 0, raf: 0, spawnT: 0, last: 0, items: [] };
 function startBalloon() {
   show('balloon');
-  bg.target = rand(pool()); bg.hits = 0; bg.items = []; bg.last = 0; bg.spawnT = 0;
+  bg.target = rand(pool()); bg.hits = 0; bg.miss = 0; bg.items = []; bg.last = 0; bg.spawnT = 0;
   $('sky').innerHTML = '';
   $('bTarget').textContent = LETTERS[bg.target].c;
   $('bTarget').style.color = $('bTarget').style.borderColor = colorOf(bg.target);
@@ -518,10 +549,10 @@ function tapBalloon(b) {
     setTimeout(() => b.el.remove(), 320);
     bg.hits++; scoreUp(b.i); addStars(1);
     renderDots($('bDots'), BALLOON_GOAL, bg.hits);
-    if (bg.hits >= BALLOON_GOAL) { stopBalloon(); setTimeout(() => reward('Balon ustası!', startBalloon), 500); }
+    if (bg.hits >= BALLOON_GOAL) { stopBalloon(); setTimeout(() => reward('Balon ustası!', startBalloon, starsFor(bg.miss, 0, 2)), 500); }
     else { hush(); sayLetter(b.i); }
   } else {
-    replayAnim(b.el, 'nope'); sfx.no();
+    replayAnim(b.el, 'nope'); sfx.no(); bg.miss++;
   }
 }
 $('bTarget').onclick = () => { hush(); sayLetter(bg.target); };
@@ -532,7 +563,7 @@ function startMemory() {
   show('memory');
   const p = pool();
   mg.pairs = p.length >= 8 ? 4 : 3;
-  mg.open = []; mg.matched = 0; mg.locked = false;
+  mg.open = []; mg.matched = 0; mg.locked = false; mg.miss = 0;
   const chosen = sample(p, mg.pairs);
   const deck = shuffle([...chosen, ...chosen]);
   const grid = $('mGrid');
@@ -563,10 +594,10 @@ function flipCard(c) {
       a.classList.replace('open', 'match'); b.classList.replace('open', 'match');
       sfx.ok(); confetti(20); scoreUp(i); addStars(1);
       mg.matched++;
-      if (mg.matched === mg.pairs) setTimeout(() => reward('Hafızan çok güçlü!', startMemory), 600);
+      if (mg.matched === mg.pairs) setTimeout(() => reward('Hafızan çok güçlü!', startMemory, starsFor(mg.miss, mg.pairs, mg.pairs * 2)), 600);
       else praise();
     } else {
-      a.classList.remove('open'); b.classList.remove('open'); sfx.no();
+      a.classList.remove('open'); b.classList.remove('open'); sfx.no(); mg.miss++;
     }
     mg.open = []; mg.locked = false;
   }, 900);
