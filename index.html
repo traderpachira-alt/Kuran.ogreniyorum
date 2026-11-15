@@ -20,7 +20,7 @@
 <header class="topbar">
   <button class="round-btn" id="homeBtn" aria-label="Ana sayfa" hidden>🏠</button>
   <h1 id="title">Kur'an Öğreniyorum</h1>
-  <div class="star-count" id="starCount" aria-label="Yıldızlar"><span>⭐</span><b id="starNum">0</b></div>
+  <div class="star-count" id="starCount" role="button" tabindex="0" aria-label="Yıldızlar, dükkânı aç"><span>⭐</span><b id="starNum">0</b></div>
 </header>
 
 <main>
@@ -28,6 +28,7 @@
   <section class="screen active" id="home">
     <div class="hero">
       <button class="mascot" id="mascot" aria-label="Hilal ile konuş">
+        <span class="hat" id="hat" aria-hidden="true"></span>
         <svg viewBox="0 0 120 120" aria-hidden="true">
           <circle cx="60" cy="60" r="50" fill="#fff3bf"/>
           <path d="M78 20a44 44 0 1 0 0 80a36 36 0 1 1 0-80z" fill="#ffd43b" stroke="#f59f00" stroke-width="3"/>
@@ -49,6 +50,7 @@
       <button class="tile t4" data-go="balloon"><span class="emo">🎈</span><span>Balon Patlat</span></button>
       <button class="tile t5" data-go="memory"><span class="emo">🧩</span><span>Hafıza Kartları</span></button>
       <button class="tile t6" data-go="garden"><span class="emo">🌷</span><span>Harf Bahçem</span></button>
+      <button class="tile t7 wide" data-go="shop"><span class="emo">🎁</span><span>Yıldız Dükkanı</span></button>
     </div>
 
     <button class="parent-link" id="parentBtn">🔒 Anne-Baba</button>
@@ -115,6 +117,17 @@
   <section class="screen" id="table">
     <p class="ask small">Bir harfe dokun, nasıl okunduğunu dinle! 🔊</p>
     <div class="abc" id="abcGrid"></div>
+  </section>
+
+  <!-- YILDIZ DÜKKANI -->
+  <section class="screen" id="shop">
+    <div class="world" id="world" aria-label="Benim dünyam"><span class="world-sun" aria-hidden="true"></span><p class="world-empty" id="worldEmpty">Yıldızlarınla çıkartma al,<br>dünyanı süsle!</p></div>
+    <p class="shop-tip">Çıkartmaları parmağınla istediğin yere taşı 👆</p>
+    <div class="shop-tabs" role="tablist">
+      <button class="shop-tab on" data-tab="sticker" role="tab">🐰 Çıkartmalar</button>
+      <button class="shop-tab" data-tab="hat" role="tab">👑 Hilal'i Süsle</button>
+    </div>
+    <div class="shop-grid" id="shopGrid"></div>
   </section>
 
   <!-- HARF BAHÇEM -->

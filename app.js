@@ -39,7 +39,7 @@ const LETTERS = [
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '5 (14.11.2026)';
+const VERSION = '6 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -51,7 +51,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 // ---------- Kayıt ----------
 const KEY = 'kuran-ogreniyorum-v1';
-const DEFAULTS = { stars: 0, seen: [], score: {}, settings: { sfx: true, voice: 'ar', pool: 'auto', speed: 'slow' } };
+const DEFAULTS = { stars: 0, spent: 0, seen: [], score: {}, owned: [], scene: [], hat: null, settings: { sfx: true, voice: 'ar', pool: 'auto', speed: 'slow' } };
 let S = load();
 function load() {
   try {
@@ -227,7 +227,7 @@ function renderDots(el, total, filled) {
 const TITLES = {
   home: "Kur'an Öğreniyorum", learn: 'Harfleri Tanı', find: 'Dinle ve Bul', trace: 'Harf Çiz',
   balloon: 'Balon Patlat', memory: 'Hafıza Kartları', garden: 'Harf Bahçem', parent: 'Anne-Baba',
-  table: 'Elif-Ba Tablosu', record: 'Harf Seslerim',
+  table: 'Elif-Ba Tablosu', record: 'Harf Seslerim', shop: 'Yıldız Dükkanı',
 };
 let current = 'home';
 let replay = null; // ödül ekranındaki "Tekrar" ne yapacak
@@ -251,6 +251,7 @@ function go(id) {
   if (id === 'memory') return startMemory();
   if (id === 'garden') return openGarden();
   if (id === 'table') return openTable();
+  if (id === 'shop') return openShop();
 }
 
 function reward(title, againFn) {
@@ -572,6 +573,116 @@ function openTable() {
   });
 }
 
+// ---------- 8) Yıldız Dükkanı: yıldızları harca, dünyanı süsle ----------
+const SHOP = [
+  { id: 'cloud', e: '☁️', p: 5 }, { id: 'chick', e: '🐥', p: 5 }, { id: 'bug', e: '🐞', p: 5 },
+  { id: 'flower', e: '🌸', p: 6 }, { id: 'apple', e: '🍎', p: 6 }, { id: 'straw', e: '🍓', p: 6 },
+  { id: 'fly', e: '🦋', p: 7 }, { id: 'balloon', e: '🎈', p: 8 }, { id: 'turtle', e: '🐢', p: 8 },
+  { id: 'fish', e: '🐟', p: 8 }, { id: 'bunny', e: '🐰', p: 10 }, { id: 'cat', e: '🐱', p: 10 },
+  { id: 'sunfl', e: '🌻', p: 10 }, { id: 'tree', e: '🌳', p: 12 }, { id: 'sheep', e: '🐑', p: 12 },
+  { id: 'moon', e: '🌙', p: 12 }, { id: 'camel', e: '🐪', p: 15 }, { id: 'rainbow', e: '🌈', p: 15 },
+  { id: 'house', e: '🏡', p: 20 }, { id: 'mosque', e: '🕌', p: 25 },
+];
+const HATS = [
+  { id: 'bow', e: '🎀', p: 10 }, { id: 'daisy', e: '🌼', p: 12 }, { id: 'cap', e: '🧢', p: 15 },
+  { id: 'tophat', e: '🎩', p: 20 }, { id: 'crown', e: '👑', p: 30 },
+];
+const SCENE_MAX = 40;
+let shopTab = 'sticker';
+
+function renderHat() {
+  const h = HATS.find(x => x.id === S.hat);
+  $('hat').textContent = h ? h.e : '';
+}
+function openShop() { show('shop'); renderWorld(); renderShop(); }
+function renderWorld(newIdx) {
+  const w = $('world');
+  w.querySelectorAll('.sticker').forEach(el => el.remove());
+  $('worldEmpty').hidden = S.scene.length > 0;
+  S.scene.forEach((st, k) => {
+    const el = document.createElement('button');
+    el.className = 'sticker' + (k === newIdx ? ' new' : '');
+    el.textContent = st.e;
+    el.style.left = st.x + '%'; el.style.top = st.y + '%';
+    el.setAttribute('aria-label', 'Çıkartma');
+    dragSticker(el, k);
+    w.appendChild(el);
+  });
+}
+function dragSticker(el, k) {
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId); el.classList.add('drag'); sfx.flip();
+    const move = ev => {
+      const r = $('world').getBoundingClientRect();
+      const x = Math.min(96, Math.max(4, (ev.clientX - r.left) / r.width * 100));
+      const y = Math.min(92, Math.max(8, (ev.clientY - r.top) / r.height * 100));
+      S.scene[k].x = Math.round(x * 10) / 10; S.scene[k].y = Math.round(y * 10) / 10;
+      el.style.left = x + '%'; el.style.top = y + '%';
+    };
+    const up = () => {
+      el.classList.remove('drag'); save();
+      el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+    };
+    el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  });
+}
+function renderShop() {
+  document.querySelectorAll('.shop-tab').forEach(t => t.classList.toggle('on', t.dataset.tab === shopTab));
+  const g = $('shopGrid'); g.innerHTML = '';
+  if (shopTab === 'hat') {
+    const prev = document.createElement('div');
+    prev.className = 'hat-preview'; prev.style.gridColumn = '1 / -1';
+    prev.innerHTML = $('mascot').innerHTML.replace('id="hat"', '');
+    g.appendChild(prev);
+  }
+  (shopTab === 'hat' ? HATS : SHOP).forEach(it => {
+    const owned = shopTab === 'hat' && S.owned.includes(it.id);
+    const worn = owned && S.hat === it.id;
+    const can = !owned && S.stars >= it.p;
+    const b = document.createElement('button');
+    b.className = 'item ' + (owned ? 'owned' : can ? 'can' : 'cant') + (worn ? ' worn' : '');
+    b.innerHTML = `<span class="ie">${it.e}</span>` + (owned
+      ? `<span class="tag">${worn ? '✔ Takılı' : 'Tak'}</span>`
+      : `<span class="price">⭐ ${it.p}</span><span class="bar"><i style="width:${Math.min(100, S.stars / it.p * 100)}%"></i></span>`);
+    b.setAttribute('aria-label', owned ? (worn ? 'Çıkar' : 'Tak') : `${it.p} yıldız`);
+    b.onclick = () => buy(it, b);
+    g.appendChild(b);
+  });
+}
+function buy(it, btn) {
+  const isHat = shopTab === 'hat';
+  if (isHat && S.owned.includes(it.id)) {          // sahip olunan süs: tak / çıkar (ücretsiz)
+    S.hat = S.hat === it.id ? null : it.id; save();
+    sfx.flip(); renderHat(); renderShop();
+    if (S.hat) { hush(); speak("Hilal'e çok yakıştı!", 'tr'); }
+    return;
+  }
+  if (S.stars < it.p) {
+    replayAnim(btn, 'nope'); sfx.no();
+    hush(); speak(`${it.p - S.stars} yıldız daha topla!`, 'tr');
+    return;
+  }
+  S.stars -= it.p; S.spent = (S.spent || 0) + it.p;
+  let newIdx;
+  if (isHat) {
+    S.owned.push(it.id); S.hat = it.id; renderHat();
+    hush(); speak("Yaşasın! Hilal'e çok yakıştı!", 'tr');
+  } else {
+    if (S.scene.length >= SCENE_MAX) S.scene.shift();   // dünya dolduysa en eski çıkartma uçar
+    S.scene.push({ e: it.e, x: 10 + Math.round(Math.random() * 80), y: 25 + Math.round(Math.random() * 60) });
+    newIdx = S.scene.length - 1;
+    hush(); speak('Yaşasın! Dünyana eklendi!', 'tr');
+  }
+  save();
+  $('starNum').textContent = S.stars;
+  sfx.win(); confetti(40);
+  renderWorld(newIdx); renderShop();
+}
+document.querySelectorAll('.shop-tab').forEach(t => { t.onclick = () => { shopTab = t.dataset.tab; sfx.flip(); renderShop(); }; });
+$('starCount').onclick = () => openShop();
+$('starCount').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') openShop(); };
+
 // ---------- 6) Harf Bahçem ----------
 function openGarden() {
   show('garden');
@@ -765,7 +876,7 @@ function openGate() {
 function openParent() {
   show('parent');
   const mastered = Object.values(S.score).filter(v => v >= MASTERED).length;
-  $('pStats').innerHTML = `<div><b>${S.seen.length}/28</b>harf gördü</div><div><b>${mastered}/28</b>harfi biliyor</div><div><b>${S.stars}</b>yıldız</div>`;
+  $('pStats').innerHTML = `<div><b>${S.seen.length}/28</b>harf gördü</div><div><b>${mastered}/28</b>harfi biliyor</div><div><b>${S.stars + (S.spent || 0)}</b>yıldız kazandı</div>`;
   $('optSfx').checked = S.settings.sfx;
   $('optVoice').value = S.settings.voice;
   $('optPool').value = S.settings.pool;
@@ -789,7 +900,7 @@ $('resetBtn').onclick = () => {
   resetArmed = false; btn.textContent = 'İlerlemeyi sıfırla';
   const settings = S.settings;
   S = JSON.parse(JSON.stringify(DEFAULTS)); S.settings = settings; save();
-  $('starNum').textContent = 0; openParent();
+  $('starNum').textContent = 0; renderHat(); openParent();
 };
 $('parentBtn').onclick = openGate;
 $('gateClose').onclick = () => { $('gate').hidden = true; };
@@ -813,3 +924,4 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 $('appVersion').textContent = VERSION;
+renderHat();

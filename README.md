@@ -31,6 +31,7 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 | 🎈 **Balon Patlat** | Hızlı tanıma | Yükselen balonlardan hedef harfi taşıyanları patlat. 5 balon. |
 | 🧩 **Hafıza Kartları** | Görsel hafıza | Kartları çevir, aynı harfleri eşleştir (3–4 çift). |
 | 🌷 **Harf Bahçem** | İlerlemeyi görmek | 28 harf; görülen harfler 🌱 filiz, en az 3 kez doğru bilinen harfler 🌸 çiçek olur. |
+| 🎁 **Yıldız Dükkanı** | Motivasyon | Oyunlarda kazanılan yıldızlarla çıkartma alınır ve "Benim Dünyam" sahnesine parmakla yerleştirilir; Hilal'e taç, şapka gibi süsler alınır. Fiyatlar 5–30 yıldız; yetmeyen yıldız çubukla gösterilir ve "… yıldız daha topla!" diye söylenir. |
 | 🔤 **Elif-Ba Tablosu** | Harflerin okunuşu | 28 harf tek ekranda; hangisine dokunulursa o harf okunur. Serbest keşif içindir.
 
 ## Ses

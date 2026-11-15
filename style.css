@@ -68,7 +68,10 @@ main { flex: 1; position: relative; min-height: 0; }
 /* ---------- Ana sayfa ---------- */
 .hero { display: flex; align-items: center; gap: 12px; max-width: 760px; width: 100%; margin: 4px 0 14px; }
 .mascot { background: none; padding: 0; width: clamp(90px, 22vw, 140px); flex: none; animation: float 3s ease-in-out infinite; }
+.mascot { position: relative; }
 .mascot svg { width: 100%; display: block; }
+.hat { position: absolute; left: 8%; top: -16%; font-size: clamp(2.2rem, 9vw, 3.4rem); line-height: 1; transform: rotate(-14deg); pointer-events: none; }
+.star-count { cursor: pointer; }
 .bubble {
   position: relative; background: #fff; padding: 14px 20px; border-radius: 24px;
   font-size: clamp(1.05rem, 3.6vw, 1.5rem); line-height: 1.3; box-shadow: 0 6px 0 #c5d6e6;
@@ -98,6 +101,7 @@ main { flex: 1; position: relative; min-height: 0; }
 .t5 { background: #38d9a9; box-shadow: 0 7px 0 #0ca678; }
 .t0 { background: #fcc419; box-shadow: 0 7px 0 #e67700; color: #5c3c00; text-shadow: 0 2px 0 rgba(255,255,255,.4); }
 .tile.wide { grid-column: 1 / -1; flex-direction: row; gap: 14px; min-height: 96px; }
+.t7 { background: #74c0fc; box-shadow: 0 7px 0 #1c7ed6; }
 .t6 { background: #f783ac; box-shadow: 0 7px 0 #d6336c; }
 
 .parent-link {
@@ -245,6 +249,50 @@ main { flex: 1; position: relative; min-height: 0; }
 .abc-cell .nm { font-size: clamp(.95rem, 3.6vw, 1.15rem); font-weight: 800; line-height: 1; direction: ltr; }
 .abc-cell.playing { background: var(--c); animation: pop .45s; }
 .abc-cell.playing .ch, .abc-cell.playing .nm { color: #fff; }
+
+/* ---------- Yıldız Dükkanı ---------- */
+.world {
+  position: relative; width: 100%; max-width: 760px; height: min(38vh, 320px); flex: none;
+  border-radius: 30px; overflow: hidden; touch-action: none;
+  background: linear-gradient(180deg, #74c0fc 0%, #d0ebff 58%, #8ce99a 58%, #51cf66 100%);
+  box-shadow: inset 0 0 0 5px #fff, 0 8px 0 rgba(0,0,0,.1);
+}
+.world-sun { position: absolute; right: 7%; top: 9%; width: 54px; height: 54px; border-radius: 50%; background: #ffe066; box-shadow: 0 0 0 10px rgba(255,224,102,.35); }
+.world-empty[hidden] { display: none; }
+.world-empty { position: absolute; inset: 0; margin: 0; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 800; font-size: 1.2rem; color: #1864ab; }
+.sticker {
+  position: absolute; transform: translate(-50%, -50%); font-size: clamp(2.4rem, 9vw, 3.4rem); line-height: 1;
+  background: none; padding: 4px; cursor: grab; touch-action: none; filter: drop-shadow(0 3px 2px rgba(0,0,0,.2));
+}
+.sticker.new { animation: drop .6s; }
+.sticker.drag { cursor: grabbing; transform: translate(-50%, -50%) scale(1.25); z-index: 5; }
+.shop-tip { margin: 8px 0 6px; font-size: 1rem; color: #1864ab; font-weight: 700; text-align: center; }
+.shop-tabs { display: flex; gap: 10px; margin-bottom: 12px; }
+.shop-tab { padding: 10px 18px; border-radius: 999px; background: #fff; font-size: 1.1rem; font-weight: 800; box-shadow: 0 4px 0 #c5d6e6; }
+.shop-tab.on { background: #1c7ed6; color: #fff; box-shadow: 0 4px 0 #1864ab; }
+.shop-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 12px;
+  width: 100%; max-width: 760px;
+}
+.item {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 6px 12px; border-radius: 22px; background: #fff; border: 4px solid #ffd43b;
+  box-shadow: 0 6px 0 rgba(0,0,0,.1);
+}
+.item .ie { font-size: 2.8rem; line-height: 1.1; }
+.item .price { font-weight: 800; font-size: 1.1rem; }
+.item .bar { width: 80%; height: 8px; border-radius: 6px; background: #e9ecef; overflow: hidden; }
+.item .bar i { display: block; height: 100%; background: #fcc419; }
+.item.can { animation: pulse 2.2s infinite; }
+.item.cant { border-color: #dee2e6; }
+.item.cant .ie { filter: grayscale(.7); opacity: .55; }
+.item.owned { border-color: #40c057; }
+.item.worn { background: #d3f9d8; }
+.item .tag { font-size: .85rem; font-weight: 800; color: #2b8a3e; }
+.item.nope { animation: shake .45s; }
+.hat-preview { width: 110px; margin: 0 auto 10px; position: relative; }
+.hat-preview svg { width: 100%; display: block; }
+@keyframes drop { 0% { transform: translate(-50%, -160%) scale(.4); opacity: 0; } 70% { transform: translate(-50%, -40%) scale(1.15); opacity: 1; } }
 
 /* ---------- Ebeveyn ---------- */
 .panel { width: 100%; max-width: 620px; background: #fff; border-radius: 28px; padding: 8px 22px 22px; box-shadow: 0 8px 0 rgba(0,0,0,.08); }
