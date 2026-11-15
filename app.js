@@ -42,7 +42,7 @@ LETTERS.forEach(L => { L.ar = L.c + FATHA; L.cf = L.c + FATHA; });   // üstünl
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '11 (15.11.2026)';
+const VERSION = '12 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -124,22 +124,26 @@ function decodeAudio(buf) {
 let clip = null, srcNode = null;
 const recRaw = {};   // harf no -> { buf, type } (ebeveyn kaydı, yedek için ham hali)
 const recBuf = {};   // harf no -> çözülmüş ses
-const recUrls = {};  // çözülemeyen biçimler için yedek: <audio> adresi
 const appBuf = {};   // harf no -> uygulamayla gelen çözülmüş ses
 let appClips = {};   // harf no -> dosya adı (ses/sesler.json)
 
+const appRaw = {};   // harf no -> { buf, type } (yedek çalma yolu için ham hali)
+async function keepAppClip(k, buf) {
+  appRaw[k] = { buf, type: 'audio/mpeg' };
+  try { appBuf[k] = await decodeAudio(buf); } catch (e) { /* <audio> yolu kullanılır */ }
+}
 async function loadAppClips() {
   try {
     const embedded = window.KURAN_CLIPS;          // tek dosyalık sürümde sayfanın içine gömülü
     if (embedded) {
       appClips = Object.fromEntries(Object.keys(embedded).map(k => [k, true]));
-      await Promise.all(Object.entries(embedded).map(async ([k, b64]) => { appBuf[k] = await decodeAudio(b64ToBuf(b64)); }));
+      await Promise.all(Object.entries(embedded).map(([k, b64]) => keepAppClip(k, b64ToBuf(b64))));
     } else {
       const r = await fetch('ses/sesler.json');
       if (!r.ok) return;
       appClips = await r.json();
       await Promise.all(Object.entries(appClips).map(async ([k, f]) => {
-        appBuf[k] = await decodeAudio(await (await fetch('ses/' + f)).arrayBuffer());
+        await keepAppClip(k, await (await fetch('ses/' + f)).arrayBuffer());
       }));
     }
   } catch (e) { /* kayıt yoksa yapay ses kullanılır */ }
@@ -177,35 +181,71 @@ const recStore = (() => {
 async function loadRec(i, buf, type) {
   recRaw[i] = { buf, type };
   delete recBuf[i];
-  if (recUrls[i]) { URL.revokeObjectURL(recUrls[i]); delete recUrls[i]; }
-  try { recBuf[i] = await decodeAudio(buf); }
-  catch (e) { recUrls[i] = URL.createObjectURL(new Blob([buf], { type })); }
+  try { recBuf[i] = await decodeAudio(buf); } catch (e) { /* <audio> yolu kullanılır */ }
 }
 function dropRec(i) {
   delete recRaw[i]; delete recBuf[i];
-  if (recUrls[i]) { URL.revokeObjectURL(recUrls[i]); delete recUrls[i]; }
 }
 const hasRec = i => !!recRaw[i];
 
+// iPhone'da sessiz moddayken de çalsın (iOS 17+): ses oturumunu "oynatma" yap.
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* yoksay */ }
+// Her dokunuşta ses motorunu uyandır (bazı tarayıcılar yalnızca dokunuşla açar, iPhone arada kapatabilir).
+function unlockAudio() {
+  try {
+    const c = getCtx();
+    if (c.state !== 'running') c.resume().catch(() => {});
+    const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0);
+  } catch (e) { /* yoksay */ }
+}
+['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, unlockAudio, { capture: true, passive: true }));
+
+let lastPath = '';   // Anne-Baba bölümündeki ses testi için: en son hangi yolla çalındı
 function playBuffer(b) {
   return new Promise(resolve => {
     const c = getCtx();
-    if (c.state === 'suspended') c.resume();
     const s = c.createBufferSource();
     s.buffer = b; s.connect(c.destination);
     s.onended = () => { if (srcNode === s) srcNode = null; resolve(); };
     srcNode = s; s._done = resolve;
     s.start();
+    lastPath = 'Web Audio';
   });
 }
 function playUrl(url) {
   return new Promise((resolve, reject) => {
     const a = new Audio(url);
     clip = a;
-    a.onended = () => resolve();
-    a.onerror = () => reject();
-    a.play().catch(err => (err && err.name === 'NotAllowedError') ? resolve() : reject());
+    let settled = false;
+    const ok = () => { if (!settled) { settled = true; resolve(); } };
+    const no = () => { if (!settled) { settled = true; if (clip === a) clip = null; reject(); } };
+    a.onended = ok;
+    a.onerror = no;
+    a.onplaying = () => { lastPath = 'ses dosyası'; };
+    const p = a.play();
+    if (p && p.catch) p.catch(no);
+    setTimeout(() => { if (a.paused && !a.ended) no(); }, 1500);   // hiç başlamadıysa yedeğe geç
   });
+}
+const rawUrls = new Map();
+function rawUrl(raw) {
+  if (!rawUrls.has(raw)) rawUrls.set(raw, URL.createObjectURL(new Blob([raw.buf], { type: raw.type })));
+  return rawUrls.get(raw);
+}
+// iPhone/iPad'de Web Audio sessiz moddayken susar; orada önce ses dosyası yolu denenir.
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+/** Bir kaydı en güvenilir yolla çalar: Web Audio açıksa onunla, değilse ses dosyası olarak, o da olmazsa yapay sesle. */
+function playSound(buf, raw, fallback) {
+  const c = getCtx();
+  if (buf && c.state === 'running' && !(IS_IOS && raw)) return playBuffer(buf);
+  if (raw) {
+    return playUrl(rawUrl(raw)).catch(() => {
+      if (buf) return c.resume().then(() => (c.state === 'running' ? playBuffer(buf) : fallback()), fallback);
+      return fallback();
+    });
+  }
+  if (buf) return c.resume().then(() => (c.state === 'running' ? playBuffer(buf) : fallback()), fallback);
+  return fallback();
 }
 function hush() {
   try { speechSynthesis.cancel(); } catch (e) { /* yoksay */ }
@@ -214,10 +254,9 @@ function hush() {
 }
 function sayLetter(i) {
   const L = LETTERS[i], r = RATES[S.settings.speed] || RATES.slow;
-  const tts = () => (S.settings.voice === 'ar' && hasArabic()) ? speak(L.ar, 'ar', r.ar) : speak(L.tr, 'tr', r.tr);
-  if (recBuf[i]) return playBuffer(recBuf[i]);              // ebeveynin sesi her zaman önce gelir
-  if (recUrls[i]) return playUrl(recUrls[i]).catch(tts);
-  if (appBuf[i]) return playBuffer(appBuf[i]);              // hocanın sesi
+  const tts = () => { lastPath = 'yapay ses'; return (S.settings.voice === 'ar' && hasArabic()) ? speak(L.ar, 'ar', r.ar) : speak(L.tr, 'tr', r.tr); };
+  if (recRaw[i]) return playSound(recBuf[i], recRaw[i], tts);    // ebeveynin sesi her zaman önce gelir
+  if (appRaw[i]) return playSound(appBuf[i], appRaw[i], tts);    // hocanın sesi
   return tts();
 }
 function praise() { const p = rand(PRAISE); speak(withName(p, 0.6), 'tr'); return p; }
@@ -1007,8 +1046,14 @@ function openGate() {
   });
   $('gate').hidden = false;
 }
+function audioDiag() {
+  const n = Object.keys(appRaw).length, d = Object.keys(appBuf).length;
+  const st = actx ? ({ running: 'açık', suspended: 'bekliyor (ekrana dokunun)', interrupted: 'kesildi' }[actx.state] || actx.state) : 'kapalı';
+  $('audioDiag').textContent = `Hoca sesleri: ${n}/28 yüklendi, ${d}/28 hazır · Ses motoru: ${st}` + (lastPath ? ` · Son çalan: ${lastPath}` : '');
+}
 function openParent() {
   show('parent');
+  audioDiag();
   const mastered = Object.values(S.score).filter(v => v >= MASTERED).length;
   $('pStats').innerHTML = `<div><b>${S.seen.length}/28</b>harf gördü</div><div><b>${mastered}/28</b>harfi biliyor</div><div><b>${S.stars + (S.spent || 0)}</b>yıldız kazandı</div>`;
   $('optSfx').checked = S.settings.sfx;
@@ -1026,6 +1071,7 @@ $('optName').oninput = e => {
   if (v !== e.target.value) e.target.value = v;
   S.settings.childName = v.trim(); save(); greet();
 };
+$('soundTest').onclick = async () => { hush(); await sayLetter(1); audioDiag(); setTimeout(audioDiag, 400); };
 $('nameTest').onclick = () => { hush(); speak(childName() ? `Aferin, ${childName()}! Maşallah, ${childName()}!` : 'Aferin! Maşallah!', 'tr'); };
 $('optVoice').onchange = e => { S.settings.voice = e.target.value; save(); };
 $('optPool').onchange = e => { S.settings.pool = e.target.value; save(); };
@@ -1061,9 +1107,11 @@ $('mascot').onclick = () => {
 $('starNum').textContent = S.stars;
 
 // Çevrimdışı çalışma
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-}
+try {
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => { try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) { /* çerçeve içinde kapalı */ } });
+  }
+} catch (e) { /* yoksay */ }
 $('appVersion').textContent = VERSION;
 recStore.all().then(async all => {
   for (const [k, v] of Object.entries(all)) await loadRec(k, v.buf, v.type);
