@@ -29,7 +29,7 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 |---|---|---|
 | 📖 **Harfleri Tanı** | Harfin şekli ve adı | Büyük harf kartı; dokununca harf okunur. Altında harfi hatırlatan ipucu yer alır ("Altında 1 nokta" gibi). |
 | 👂 **Dinle ve Bul** | Sesi şekille eşleştirme | Harf okunur, çocuk 3–4 seçenekten doğrusunu seçer. 6 tur. |
-| ✏️ **Harf Çiz** | Harfin yazılışı, ince motor beceri | Parmakla kesikli çizgili harfin üstünden geçilir; kalem rengini çocuk seçer (9 renk ve gökkuşağı). Boya yalnızca harfin içinde görünür, dışarı taşmaz. Harfin gövdesi ve her noktası ayrı ayrı kontrol edilir; nokta eksikse "Noktaları da unutma!" denir. Bir tur 3 harftir. Uygulama çizimin harfi ne kadar kapladığını ölçer ve yeterince iyiyse kutlar. |
+| ✏️ **Harf Çiz** | Harfin yazılışı, ince motor beceri | Parmakla kesikli çizgili harfin üstünden geçilir; kalem rengini çocuk seçer (9 renk ve gökkuşağı). Boya yalnızca harfin içinde görünür, dışarı taşmaz. Harf ancak en az %99'u boyanınca kabul edilir; altta bir çubuk boyanan oranı gösterir, %85'i geçince boş kalan yerler turuncu yanar. Her nokta da ayrıca kontrol edilir; nokta eksikse "Noktaları da unutma!" denir. Bir tur 3 harftir. Uygulama çizimin harfi ne kadar kapladığını ölçer ve yeterince iyiyse kutlar. |
 | 🎈 **Balon Patlat** | Hızlı tanıma | Yükselen balonlardan hedef harfi taşıyanları patlat. 5 balon. |
 | 🧩 **Hafıza Kartları** | Görsel hafıza | Kartları çevir, aynı harfleri eşleştir (3–4 çift). |
 | 🌷 **Harf Bahçem** | İlerlemeyi görmek | 28 harf; görülen harfler 🌱 filiz, en az 3 kez doğru bilinen harfler 🌸 çiçek olur. |

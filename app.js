@@ -42,7 +42,7 @@ LETTERS.forEach(L => { L.ar = L.c + FATHA; L.cf = L.c + FATHA; });   // üstünl
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '22 (15.11.2026)';
+const VERSION = '23 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -517,6 +517,7 @@ async function setupTrace() {
   tg.brush = Math.max(22, tg.size * 0.09);
   drawGuide(gctx, tg.size, L.c, true);
   drawGuide(mctx, tg.size, L.c, false, 4);     // boyanabilir alan: harfin kendisi (kenarı biraz yumuşak)
+  setTraceProgress(0);
   clearInk();
   tg.drew = false;
   hush(); sayLetter(tg.idx);
@@ -615,13 +616,35 @@ function checkTrace() {
   for (let k = 3; k < ink.length; k += 4) if (near[k] < 60) { emptyPx++; if (ink[k] > 60) outside++; }
   const scribble = emptyPx ? outside / emptyPx : 0;
   const parts = letterParts(mask, N).sort((a, b) => b.length - a.length);
-  const cover = px => px.filter(p => ink[p * 4 + 3] > 60).length / px.length;
+  const painted = p => ink[p * 4 + 3] > 60;
+  const cover = px => px.filter(painted).length / px.length;
+  const all = parts.flat();
+  const total = all.length ? cover(all) : 0;                      // harfin (gövde + noktalar) boyanan oranı
   const body = parts.length ? cover(parts[0]) : 0;
-  const smallOk = parts.slice(1).every(px => cover(px) >= 0.5);   // noktalar ve küçük işaretler
-  if (body > 0.6 && smallOk && scribble < 0.5) return traceSuccess();
-  if (body > 0.6 && !smallOk && scribble < 0.5 && !tg.hinted) {        // gövde bitti, nokta eksik
-    tg.hinted = true; hush(); speak(nameFirst('Noktaları da unutma!', 0.5), 'tr');
+  const smallOk = parts.slice(1).every(px => cover(px) >= 0.9);   // her nokta da neredeyse tamamen boyanmalı
+  setTraceProgress(total);
+  showMissing(total >= 0.85 ? all.filter(p => !painted(p)) : [], N);
+  if (total >= TRACE_MIN && smallOk && scribble < 0.5) return traceSuccess();
+  if (scribble >= 0.5) return;
+  if (body >= 0.95 && !smallOk && tg.hinted !== 'dots') {           // gövde bitti, nokta eksik
+    tg.hinted = 'dots'; hush(); speak(nameFirst('Noktaları da unutma!', 0.5), 'tr');
+  } else if (total >= 0.85 && smallOk && tg.hinted !== 'gaps') {     // az kaldı: boş kalan yerleri göster
+    tg.hinted = 'gaps'; hush(); speak(nameFirst('Az kaldı! Turuncu yerleri de boya.', 0.5), 'tr');
   }
+}
+const TRACE_MIN = 0.99;   // harfin en az %99'u boyanmalı
+function setTraceProgress(v) {
+  const pct = Math.min(100, Math.floor(v * 100));
+  $('tProg').style.width = pct + '%';
+  $('tProgNum').textContent = '%' + pct;
+}
+/** Boyanmamış kalan yerleri kılavuz tuvalinde turuncu gösterir (boya bunların üstünü kapatır). */
+function showMissing(px, N) {
+  drawGuide(gctx, tg.size, LETTERS[tg.idx].c, true);
+  if (!px.length) return;
+  const k = tg.size / N;
+  gctx.fillStyle = '#ffa94d';
+  px.forEach(p => gctx.fillRect((p % N) * k - k * 0.6, ((p / N) | 0) * k - k * 0.6, k * 2.2, k * 2.2));
 }
 function traceSuccess() {
   tg.done = true;
@@ -642,7 +665,7 @@ function nextTrace() {
   tg.idx = p[(k + 1) % p.length];
   setupTrace();
 }
-$('tClear').onclick = () => { if (tg.done) return; clearInk(); if (tg.drew) tg.miss++; tg.drew = false; tg.hinted = false; };
+$('tClear').onclick = () => { if (tg.done) return; clearInk(); if (tg.drew) tg.miss++; tg.drew = false; tg.hinted = false; setTraceProgress(0); drawGuide(gctx, tg.size, LETTERS[tg.idx].c, true); };
 $('tNext').onclick = nextTrace;
 $('tSpeak').onclick = () => { hush(); sayLetter(tg.idx); };
 window.addEventListener('resize', () => { if (current === 'trace') setupTrace(); });
