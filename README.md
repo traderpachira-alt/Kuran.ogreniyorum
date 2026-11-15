@@ -19,6 +19,7 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 - **Ceza yok, hep teşvik var:** Yanlış cevapta kart sallanır ve harf tekrar okunur; doğru cevapta konfeti, "Aferin!", "Maşallah!" gibi sesli övgüler ve yıldızlar gelir.
 - **Kısa oturumlar:** Her oyun 1–2 dakikada biter ve bir ödül ekranıyla kapanır.
 - **Adım adım ilerleme:** Oyunlar, çocuğun *Harfleri Tanı* bölümünde gördüğü harflerle oynanır (en az 4 harf). Böylece yeni harfler zorlamadan, sırayla eklenir.
+- **Çocuğa adıyla seslenme:** Anne-Baba bölümüne çocuğun adı yazılırsa Hilal övgü ve yönergelerde ona adıyla seslenir ("Aferin, Ayşe!", "Bul bakalım, Ayşe!"). Ad, Türkçe ek gerektirmeyecek şekilde hitap olarak eklenir; tekdüze olmasın diye bazı cümlelerde kullanılır. Ad yalnızca o cihazda saklanır.
 - **Ebeveyn kilidi:** Ayarlar, basit bir toplama sorusunun arkasındadır.
 
 ## Bölümler

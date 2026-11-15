@@ -39,7 +39,7 @@ const LETTERS = [
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '6 (15.11.2026)';
+const VERSION = '7 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -51,7 +51,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 // ---------- Kayıt ----------
 const KEY = 'kuran-ogreniyorum-v1';
-const DEFAULTS = { stars: 0, spent: 0, seen: [], score: {}, owned: [], scene: [], hat: null, settings: { sfx: true, voice: 'ar', pool: 'auto', speed: 'slow' } };
+const DEFAULTS = { stars: 0, spent: 0, seen: [], score: {}, owned: [], scene: [], hat: null, settings: { sfx: true, voice: 'ar', pool: 'auto', speed: 'slow', childName: '' } };
 let S = load();
 function load() {
   try {
@@ -177,7 +177,28 @@ function sayLetter(i) {
   if (S.settings.voice === 'tr') return tts();
   return playClip(i).catch(tts);
 }
-function praise() { const p = rand(PRAISE); speak(p, 'tr'); return p; }
+function praise() { const p = rand(PRAISE); speak(withName(p, 0.6), 'tr'); return p; }
+
+// ---------- Çocuğun adı ----------
+// Ad, Türkçe ek gerektirmeyecek şekilde hitap olarak eklenir: "Aferin!" -> "Aferin, Ayşe!"
+const childName = () => (S.settings.childName || '').trim();
+function withName(text, chance = 1) {
+  const n = childName();
+  if (!n || Math.random() > chance) return text;
+  const m = text.match(/^(.*?)([!?.]*)$/);
+  return `${m[1]}, ${n}${m[2] || '!'}`;
+}
+function cleanName(v) {
+  return v.replace(/[^\p{L}\s'-]/gu, '').replace(/\s+/g, ' ').replace(/^\s+/, '').slice(0, 20)
+    .split(' ').map(w => (w ? w[0].toLocaleUpperCase('tr') + w.slice(1) : w)).join(' ');
+}
+function esc(t) { return t.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+function greet() {
+  const n = childName();
+  $('bubble').innerHTML = n
+    ? `Selam <b>${esc(n)}</b>! Ben <b>Hilal</b>.<br>Hadi harfleri öğrenelim!`
+    : 'Selam! Ben <b>Hilal</b>.<br>Hadi harfleri öğrenelim!';
+}
 
 // ---------- Ses: efektler (dosya gerektirmez) ----------
 let actx;
@@ -259,7 +280,7 @@ function reward(title, againFn) {
   sfx.win(); confetti(70); addStars(3);
   $('rTitle').textContent = title || rand(PRAISE);
   $('reward').hidden = false;
-  speak('Tebrikler! Üç yıldız kazandın!', 'tr');
+  speak(withName('Tebrikler!') + ' Üç yıldız kazandın!', 'tr');
 }
 
 // ---------- 1) Harfleri Tanı ----------
@@ -309,7 +330,7 @@ function nextFind() {
   fg.locked = false;
   promptFind();
 }
-async function promptFind() { hush(); await speak('Bul bakalım!', 'tr'); if (current === 'find') sayLetter(fg.target); }
+async function promptFind() { hush(); await speak(withName('Bul bakalım!', 0.5), 'tr'); if (current === 'find') sayLetter(fg.target); }
 $('fSpeak').onclick = () => { hush(); sayLetter(fg.target); };
 function pickFind(btn, i) {
   if (fg.locked) return;
@@ -457,7 +478,7 @@ function startBalloon() {
   $('bTarget').textContent = LETTERS[bg.target].c;
   $('bTarget').style.color = $('bTarget').style.borderColor = colorOf(bg.target);
   renderDots($('bDots'), BALLOON_GOAL, 0);
-  (async () => { hush(); await speak('Bu harfi patlat!', 'tr'); if (current === 'balloon') sayLetter(bg.target); })();
+  (async () => { hush(); await speak(withName('Bu harfi patlat!', 0.5), 'tr'); if (current === 'balloon') sayLetter(bg.target); })();
   bg.raf = requestAnimationFrame(balloonLoop);
 }
 function stopBalloon() { cancelAnimationFrame(bg.raf); bg.raf = 0; }
@@ -526,7 +547,7 @@ function startMemory() {
     c.onclick = () => flipCard(c);
     grid.appendChild(c);
   });
-  speak('Aynı harfleri bul!', 'tr');
+  speak(withName('Aynı harfleri bul!', 0.6), 'tr');
 }
 function flipCard(c) {
   if (mg.locked || c.classList.contains('open') || c.classList.contains('match')) return;
@@ -660,19 +681,19 @@ function buy(it, btn) {
   }
   if (S.stars < it.p) {
     replayAnim(btn, 'nope'); sfx.no();
-    hush(); speak(`${it.p - S.stars} yıldız daha topla!`, 'tr');
+    hush(); speak(withName(`${it.p - S.stars} yıldız daha topla!`, 0.5), 'tr');
     return;
   }
   S.stars -= it.p; S.spent = (S.spent || 0) + it.p;
   let newIdx;
   if (isHat) {
     S.owned.push(it.id); S.hat = it.id; renderHat();
-    hush(); speak("Yaşasın! Hilal'e çok yakıştı!", 'tr');
+    hush(); speak(withName('Yaşasın!', 0.7) + " Hilal'e çok yakıştı!", 'tr');
   } else {
     if (S.scene.length >= SCENE_MAX) S.scene.shift();   // dünya dolduysa en eski çıkartma uçar
     S.scene.push({ e: it.e, x: 10 + Math.round(Math.random() * 80), y: 25 + Math.round(Math.random() * 60) });
     newIdx = S.scene.length - 1;
-    hush(); speak('Yaşasın! Dünyana eklendi!', 'tr');
+    hush(); speak(withName('Yaşasın!', 0.7) + ' Dünyana eklendi!', 'tr');
   }
   save();
   $('starNum').textContent = S.stars;
@@ -878,6 +899,7 @@ function openParent() {
   const mastered = Object.values(S.score).filter(v => v >= MASTERED).length;
   $('pStats').innerHTML = `<div><b>${S.seen.length}/28</b>harf gördü</div><div><b>${mastered}/28</b>harfi biliyor</div><div><b>${S.stars + (S.spent || 0)}</b>yıldız kazandı</div>`;
   $('optSfx').checked = S.settings.sfx;
+  $('optName').value = S.settings.childName || '';
   $('optVoice').value = S.settings.voice;
   $('optPool').value = S.settings.pool;
   $('optSpeed').value = S.settings.speed;
@@ -886,6 +908,12 @@ function openParent() {
     : 'Bu cihazda Arapça ses bulunamadı; harf isimleri Türkçe okunur. Cihaz ayarlarından (Metin okuma / Konuşma) Arapça ses paketi yükleyebilirsiniz.';
 }
 $('optSfx').onchange = e => { S.settings.sfx = e.target.checked; save(); };
+$('optName').oninput = e => {
+  const v = cleanName(e.target.value);
+  if (v !== e.target.value) e.target.value = v;
+  S.settings.childName = v.trim(); save(); greet();
+};
+$('nameTest').onclick = () => { hush(); speak(childName() ? `Aferin, ${childName()}! Maşallah, ${childName()}!` : 'Aferin! Maşallah!', 'tr'); };
 $('optVoice').onchange = e => { S.settings.voice = e.target.value; save(); };
 $('optPool').onchange = e => { S.settings.pool = e.target.value; save(); };
 $('optSpeed').onchange = e => { S.settings.speed = e.target.value; save(); sayLetter(1); };
@@ -912,9 +940,9 @@ $('rHome').onclick = () => show('home');
 $('rAgain').onclick = () => { $('reward').hidden = true; if (replay) replay(); };
 $('mascot').onclick = () => {
   replayAnim($('bubble'), 'pop');
-  const lines = ['Selam! Ben Hilal. Hadi harfleri öğrenelim!', 'Bugün yeni bir harf öğrenelim mi?', 'Yıldız toplamaya hazır mısın?'];
+  const lines = [withName('Selam!') + ' Ben Hilal. Hadi harfleri öğrenelim!', withName('Bugün yeni bir harf öğrenelim mi?', 0.6), withName('Yıldız toplamaya hazır mısın?', 0.6)];
   const line = rand(lines);
-  $('bubble').innerHTML = line.replace('Hilal', '<b>Hilal</b>').replace('! ', '!<br>');
+  $('bubble').innerHTML = esc(line).replace('Hilal', '<b>Hilal</b>').replace('! ', '!<br>');
   hush(); speak(line, 'tr');
 };
 $('starNum').textContent = S.stars;
@@ -924,4 +952,5 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 $('appVersion').textContent = VERSION;
+greet();
 renderHat();
