@@ -42,7 +42,7 @@ LETTERS.forEach(L => { L.ar = L.c + FATHA; L.cf = L.c + FATHA; });   // üstünl
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '13 (15.11.2026)';
+const VERSION = '14 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -343,6 +343,7 @@ let replay = null; // ödül ekranındaki "Tekrar" ne yapacak
 
 function show(id) {
   stopBalloon();
+  if (window.Garden3D) Garden3D.stop();
   if (typeof stopRec === 'function') stopRec();
   hush();
   current = id;
@@ -764,20 +765,28 @@ function openTable() {
 }
 
 // ---------- 8) Yıldız Dükkanı: yıldızları harca, dünyanı süsle ----------
+// Bahçe: düşük poligonlu 3B hayvanlar ve süsler (bahce3d.js). e: dükkân kartındaki simge
 const SHOP = [
-  { id: 'cloud', e: '☁️', p: 2 }, { id: 'chick', e: '🐥', p: 2 }, { id: 'bug', e: '🐞', p: 2 },
-  { id: 'flower', e: '🌸', p: 3 }, { id: 'apple', e: '🍎', p: 3 }, { id: 'straw', e: '🍓', p: 3 },
-  { id: 'fly', e: '🦋', p: 3 }, { id: 'balloon', e: '🎈', p: 4 }, { id: 'turtle', e: '🐢', p: 4 },
-  { id: 'fish', e: '🐟', p: 4 }, { id: 'bunny', e: '🐰', p: 5 }, { id: 'cat', e: '🐱', p: 5 },
-  { id: 'sunfl', e: '🌻', p: 5 }, { id: 'tree', e: '🌳', p: 6 }, { id: 'sheep', e: '🐑', p: 6 },
-  { id: 'moon', e: '🌙', p: 6 }, { id: 'camel', e: '🐪', p: 8 }, { id: 'rainbow', e: '🌈', p: 8 },
-  { id: 'house', e: '🏡', p: 10 }, { id: 'mosque', e: '🕌', p: 12 },
+  { id: 'cloud', e: '☁️', p: 2, ad: 'Bulut' }, { id: 'chick', e: '🐥', p: 2, ad: 'Civciv' },
+  { id: 'bug', e: '🐞', p: 2, ad: 'Uğur böceği' }, { id: 'flower', e: '🌸', p: 3, ad: 'Çiçek' },
+  { id: 'butterfly', e: '🦋', p: 3, ad: 'Kelebek' }, { id: 'sunflower', e: '🌻', p: 3, ad: 'Ayçiçeği' },
+  { id: 'balloon', e: '🎈', p: 4, ad: 'Balon' }, { id: 'turtle', e: '🐢', p: 4, ad: 'Kaplumbağa' },
+  { id: 'duck', e: '🦆', p: 4, ad: 'Ördek' }, { id: 'bunny', e: '🐰', p: 5, ad: 'Tavşan' },
+  { id: 'cat', e: '🐱', p: 5, ad: 'Kedi' }, { id: 'bird', e: '🐦', p: 5, ad: 'Kuş' },
+  { id: 'tree', e: '🌳', p: 6, ad: 'Ağaç' }, { id: 'sheep', e: '🐑', p: 6, ad: 'Kuzu' },
+  { id: 'camel', e: '🐪', p: 8, ad: 'Deve' }, { id: 'rainbow', e: '🌈', p: 8, ad: 'Gökkuşağı' },
+  { id: 'house', e: '🏡', p: 10, ad: 'Ev' }, { id: 'mosque', e: '🕌', p: 12, ad: 'Cami' },
 ];
+// Eski çıkartmaları (emoji) yeni bahçe öğelerine çevir
+const OLD_STICKERS = { '☁️': 'cloud', '🐥': 'chick', '🐞': 'bug', '🌸': 'flower', '🍎': 'flower', '🍓': 'flower', '🦋': 'butterfly',
+  '🎈': 'balloon', '🐢': 'turtle', '🐟': 'duck', '🐰': 'bunny', '🐱': 'cat', '🌻': 'sunflower', '🌳': 'tree', '🐑': 'sheep',
+  '🌙': 'bird', '🐪': 'camel', '🌈': 'rainbow', '🏡': 'house', '🕌': 'mosque' };
+S.scene = (S.scene || []).map(st => (st.t ? st : { t: OLD_STICKERS[st.e] || 'flower', x: st.x, y: st.y }));
 const HATS = [
   { id: 'bow', e: '🎀', p: 5 }, { id: 'daisy', e: '🌼', p: 6 }, { id: 'cap', e: '🧢', p: 8 },
   { id: 'tophat', e: '🎩', p: 10 }, { id: 'crown', e: '👑', p: 15 },
 ];
-const SCENE_MAX = 40;
+const SCENE_MAX = 30;
 let shopTab = 'sticker';
 
 function renderHat() {
@@ -785,14 +794,24 @@ function renderHat() {
   $('hat').textContent = h ? h.e : '';
 }
 function openShop() { show('shop'); renderWorld(); renderShop(); }
+let world3d = null;   // null: henüz denenmedi, true/false: 3B çalışıyor mu
 function renderWorld(newIdx) {
   const w = $('world');
-  w.querySelectorAll('.sticker').forEach(el => el.remove());
   $('worldEmpty').hidden = S.scene.length > 0;
+  if (world3d === null) {
+    world3d = !!(window.Garden3D && Garden3D.mount(w, {
+      onTap: (k, t) => { sfx.pop(); setTimeout(() => sfx.ok(), 90); },
+      onMove: (k, x, y) => { if (S.scene[k]) { S.scene[k].x = x; S.scene[k].y = y; save(); } },
+    }));
+    w.classList.toggle('is3d', world3d);
+  }
+  if (world3d) { Garden3D.setScene(S.scene, newIdx); Garden3D.start(); return; }
+  // 3B desteklenmiyorsa (eski cihaz / internet yok): emoji çıkartmalar
+  w.querySelectorAll('.sticker').forEach(el => el.remove());
   S.scene.forEach((st, k) => {
     const el = document.createElement('button');
     el.className = 'sticker' + (k === newIdx ? ' new' : '');
-    el.textContent = st.e;
+    el.textContent = (SHOP.find(it => it.id === st.t) || SHOP[0]).e;
     el.style.left = st.x + '%'; el.style.top = st.y + '%';
     el.setAttribute('aria-label', 'Çıkartma');
     dragSticker(el, k);
@@ -835,7 +854,7 @@ function renderShop() {
     b.innerHTML = `<span class="ie">${it.e}</span>` + (owned
       ? `<span class="tag">${worn ? '✔ Takılı' : 'Tak'}</span>`
       : `<span class="price">⭐ ${it.p}</span><span class="bar"><i style="width:${Math.min(100, S.stars / it.p * 100)}%"></i></span>`);
-    b.setAttribute('aria-label', owned ? (worn ? 'Çıkar' : 'Tak') : `${it.p} yıldız`);
+    b.setAttribute('aria-label', owned ? (worn ? 'Çıkar' : 'Tak') : `${it.ad || ''} ${it.p} yıldız`);
     b.onclick = () => buy(it, b);
     g.appendChild(b);
   });
@@ -860,9 +879,9 @@ function buy(it, btn) {
     hush(); speak(withName('Yaşasın!', 0.7) + " Hilal'e çok yakıştı!", 'tr');
   } else {
     if (S.scene.length >= SCENE_MAX) S.scene.shift();   // dünya dolduysa en eski çıkartma uçar
-    S.scene.push({ e: it.e, x: 10 + Math.round(Math.random() * 80), y: 25 + Math.round(Math.random() * 60) });
+    S.scene.push({ t: it.id, x: 15 + Math.round(Math.random() * 70), y: 35 + Math.round(Math.random() * 50) });
     newIdx = S.scene.length - 1;
-    hush(); speak(withName('Yaşasın!', 0.7) + ' Dünyana eklendi!', 'tr');
+    hush(); speak(withName('Yaşasın!', 0.7) + ` ${it.ad} bahçene geldi!`, 'tr');
   }
   save();
   $('starNum').textContent = S.stars;

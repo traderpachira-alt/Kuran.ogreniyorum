@@ -20,6 +20,7 @@ if manifest.exists():
     import base64, json
     data = {k: base64.b64encode((root / 'ses' / f).read_bytes()).decode() for k, f in json.loads(manifest.read_text()).items()}
     clips = '<script>window.KURAN_CLIPS = ' + json.dumps(data) + ';</script>\n'
+page = page.replace('<script src="bahce3d.js"></script>', '<script>\n' + (root / 'bahce3d.js').read_text(encoding='utf-8') + '</script>')
 page = page.replace('<script src="app.js"></script>', clips + '<script>\n' + (root / 'app.js').read_text(encoding='utf-8') + '</script>')
 out = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else 'dist/kuran-ogreniyorum.html')
 out.parent.mkdir(parents=True, exist_ok=True)
