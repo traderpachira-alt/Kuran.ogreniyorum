@@ -49,10 +49,10 @@ def speech_parts(path, noise_db, min_silence):
     total = duration(path)
     parts, cursor = [], 0.0
     for s, e in zip(starts, ends + [total] * (len(starts) - len(ends))):
-        if s - cursor > 0.2:
+        if s - cursor > 0.35:          # çok kısa parçalar (nefes, tık) okuma sayılmaz
             parts.append([cursor, s])
         cursor = e
-    if total - cursor > 0.2:
+    if total - cursor > 0.35:
         parts.append([cursor, total])
     return parts
 
@@ -73,15 +73,56 @@ def weight(word):
     return max(w, 1.0)
 
 
-def word_times(words, start, end):
+STEP = 0.02   # zarf çözünürlüğü (saniye)
+
+
+def envelope(path):
+    """Sesin 20 ms'lik pencerelerde dB cinsinden yüksekliği (numpy varsa)."""
+    try:
+        import numpy as np
+    except ImportError:
+        return None
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', str(path), '-ac', '1', '-ar', '16000', '-f', 's16le', '-'],
+                         capture_output=True).stdout
+    x = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768
+    n = int(16000 * STEP)
+    x = x[: len(x) // n * n].reshape(-1, n)
+    return 20 * np.log10(np.sqrt((x ** 2).mean(axis=1)) + 1e-6)
+
+
+def refine(env, a, b):
+    """Parçanın başını/sonunu sesin gerçekten başladığı/bittiği yere çeker (parçanın en yüksek yerinin 20 dB altı)."""
+    if env is None:
+        return a, b
+    i, j = int(a / STEP), min(int(b / STEP), len(env) - 1)
+    thr = max(-40.0, float(env[i:j + 1].max()) - 20)
+    while i < j and env[i] < thr:
+        i += 1
+    while j > i and env[j] < thr:
+        j -= 1
+    return i * STEP, (j + 1) * STEP
+
+
+def word_times(words, start, end, env=None):
+    """Ayet süresini kelimelere harf ağırlığıyla paylaştırır; sınırları yakındaki ses çukurlarına oturtur."""
     ws = [weight(w) for w in words]
     total = sum(ws)
-    out, t = [], start
+    bounds, t = [start], start
     for w in ws:
-        d = (end - start) * w / total
-        out.append([round(t, 3), round(t + d, 3)])
-        t += d
-    return out
+        t += (end - start) * w / total
+        bounds.append(t)
+    if env is not None:
+        est = bounds[:]                                   # tahmini sınırlar: kelime en fazla %40 kısalabilir
+        for k in range(1, len(bounds) - 1):
+            lo = max(est[k] - 0.22, bounds[k - 1] + 0.6 * (est[k] - est[k - 1]))
+            hi = min(est[k] + 0.22, est[k + 1] - 0.4 * (est[k + 1] - est[k]))
+            if hi <= lo:
+                continue
+            i0, i1 = int(lo / STEP), int(hi / STEP)
+            seg = env[i0:i1 + 1]
+            if len(seg) and seg.min() < seg.max() - 6:     # belirgin bir çukur varsa
+                bounds[k] = (i0 + int(seg.argmin())) * STEP + STEP / 2
+    return [[round(bounds[k], 3), round(bounds[k + 1], 3)] for k in range(len(words))]
 
 
 def main():
@@ -97,13 +138,14 @@ def main():
         wav = pathlib.Path(tmp) / 's.wav'
         # Temizle: mono, baş/son sessizlik kırpılmaz (zamanlama kaymasın), seviye eşitlenir
         run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(src), '-ac', '1', '-ar', '44100', '-af', 'loudnorm=I=-16:TP=-1.5', str(wav)])
+        # Önce tam olarak Besmele + ayet sayısı kadar parça veren ayarı ara; yoksa Eûzü'lü (+1),
+        # en son Besmelesiz (-1) kabul et. Hızlı okumalarda ayetler arası durak kısa olabilir.
+        tries = [(d, db, speech_parts(wav, db, d))
+                 for d in (0.6, 0.5, 0.8, 0.45, 1.0, 0.35, 0.3, 0.25, 0.2)
+                 for db in (-35, -32, -38, -30, -42, -28, -45)]
         found = None
-        for d in (0.6, 0.5, 0.8, 0.45, 1.0, 0.35, 1.3):
-            for db in (-35, -32, -38, -30, -42, -28, -45):
-                parts = speech_parts(wav, db, d)
-                if len(parts) in (len(lines), len(lines) + 1, len(lines) - 1):
-                    found = (parts, d, db)
-                    break
+        for want in (len(lines), len(lines) + 1, len(lines) - 1):
+            found = next(((p, d, db) for d, db, p in tries if len(p) == want), None)
             if found:
                 break
         if not found:
@@ -119,10 +161,12 @@ def main():
             besmele = False
             lines = lines[1:]
         print(f'{len(parts)} parça bulundu (sessizlik ≥ {d}s, eşik {db}dB).')
+        env = envelope(wav)
         segs = []
         for (a, b), line in zip(parts, lines):
+            a, b = refine(env, a, b)
             words = line.split()
-            segs.append({'s': round(a, 3), 'e': round(b, 3), 'w': word_times(words, a, b)})
+            segs.append({'s': round(a, 3), 'e': round(b, 3), 'w': word_times(words, a, b, env)})
         out_mp3 = OUT / f'{int(no):03d}.mp3'
         run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(wav), '-c:a', 'libmp3lame', '-b:a', '64k', str(out_mp3)])
     manifest_path = OUT / 'sureler.json'

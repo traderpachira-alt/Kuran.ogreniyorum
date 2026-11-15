@@ -19,3 +19,7 @@ Her sure için hocanın kaydı ve kelime kelime zamanlaması burada durur:
 Araç ayet sınırlarını sessizliklerden kesin olarak bulur. Ayet içindeki kelime zamanları harf
 sayısına ve uzatmalara göre tahmin edilir; uzun meddlerde vurgu birkaç yüz milisaniye önde
 ya da geride kalabilir.
+
+## Şu anki kayıtlar
+
+- `112.mp3` İhlâs: kullanıcının sağladığı "çocuk ezber" kaydı; Besmele + 4 ayet, sessizliklerden ayrıldı.
