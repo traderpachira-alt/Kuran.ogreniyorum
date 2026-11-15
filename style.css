@@ -353,6 +353,9 @@ main { flex: 1; position: relative; min-height: 0; }
 #sure:not(.active) .sure-bar, #sure:not(.active) .your-turn { display: none; }
 .sure-play { width: 76px; height: 76px; border-radius: 50%; background: #fab005; color: #fff; font-size: 2.2rem; box-shadow: 0 6px 0 #e67700; }
 .sure-play:disabled, .sure-bar button:disabled { opacity: .4; }
+.hiz-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-weight: 800; color: #1864ab; flex-wrap: wrap; justify-content: center; }
+.hiz { padding: 8px 14px; border-radius: 999px; background: #fff; font-weight: 800; font-size: 1rem; box-shadow: 0 4px 0 #c5d6e6; }
+.hiz.on { background: #1c7ed6; color: #fff; box-shadow: 0 4px 0 #1864ab; }
 #sureMode.on { background: #e8590c; color: #fff; box-shadow: 0 5px 0 #a34700; }
 
 /* ---------- Ebeveyn ---------- */

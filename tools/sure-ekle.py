@@ -2,6 +2,7 @@
 
 Kullanım:
     python3 tools/sure-ekle.py 112 ihlas.m4a      # İhlâs
+    python3 tools/sure-ekle.py 112 ihlas.m4a --son 12.68   # 12.68. saniyeden sonrasını at (gülme, konuşma vb.)
     python3 tools/sure-ekle.py 108 kevser.mp3     # Kevser
     python3 tools/sure-ekle.py 105 fil.mp3        # Fil
 
@@ -13,6 +14,7 @@ Araç ne yapar:
   2) Her ayetin içinde kelimelere süre dağıtır: önce ayet içindeki kısa duraklara bakar,
      kalan kısmı harf sayısına (uzatmalar daha uzun sayılır) göre paylaştırır.
   3) Sesi temizleyip sure/NNN.mp3 olarak, zamanlamayı sure/sureler.json içine yazar.
+  4) Perdeyi bozmadan yavaşlatılmış 0.75 ve 0.5 hız sürümlerini üretir (NNN-075.mp3, NNN-050.mp3).
 ffmpeg gerekir.
 """
 import json
@@ -103,32 +105,75 @@ def refine(env, a, b):
     return i * STEP, (j + 1) * STEP
 
 
-def word_times(words, start, end, env=None):
-    """Ayet süresini kelimelere harf ağırlığıyla paylaştırır; sınırları yakındaki ses çukurlarına oturtur."""
-    ws = [weight(w) for w in words]
-    total = sum(ws)
-    bounds, t = [start], start
-    for w in ws:
-        t += (end - start) * w / total
-        bounds.append(t)
-    if env is not None:
-        est = bounds[:]                                   # tahmini sınırlar: kelime en fazla %40 kısalabilir
-        for k in range(1, len(bounds) - 1):
-            lo = max(est[k] - 0.22, bounds[k - 1] + 0.6 * (est[k] - est[k - 1]))
-            hi = min(est[k] + 0.22, est[k + 1] - 0.4 * (est[k + 1] - est[k]))
-            if hi <= lo:
+def dips(env, start, end):
+    """Ayet içindeki belirgin ses çukurları (kelime arası olabilecek yerler)."""
+    i0, i1 = int(start / STEP) + 4, int(end / STEP) - 4
+    out = []
+    for i in range(i0, i1):
+        if env[i] > env[max(i0, i - 3):i + 4].min():
+            continue
+        around = max(env[max(0, i - 8):i].max(initial=-99), env[i + 1:i + 9].max(initial=-99))
+        if around - env[i] >= 8:
+            if out and i * STEP - out[-1][0] < 0.08:
                 continue
-            i0, i1 = int(lo / STEP), int(hi / STEP)
-            seg = env[i0:i1 + 1]
-            if len(seg) and seg.min() < seg.max() - 6:     # belirgin bir çukur varsa
-                bounds[k] = (i0 + int(seg.argmin())) * STEP + STEP / 2
-    return [[round(bounds[k], 3), round(bounds[k + 1], 3)] for k in range(len(words))]
+            out.append((i * STEP + STEP / 2, float(around - env[i])))
+    return out
+
+
+def word_times(words, start, end, env=None):
+    """Ayet süresini kelimelere paylaştırır.
+    Ses çukurları varsa: harf ağırlığına göre beklenen sürelere en uygun çukurları seçer (dinamik programlama).
+    Yoksa: harf ağırlığıyla orantılı böler."""
+    ws = [weight(w) for w in words]
+    total, K = sum(ws), len(words)
+    exp = [(end - start) * w / total for w in ws]
+    if K > 1 and env is not None:
+        import math
+        dip = dips(env, start, end)
+        # Aday sınırlar: her 40 ms bir nokta; ses çukuruna denk gelenler ödüllendirilir (ceza 0), diğerleri 0.35 ceza alır.
+        grid = [start + k * 0.04 for k in range(1, int((end - start) / 0.04))]
+        P = [start] + sorted(set([round(g, 3) for g in grid] + [round(d, 3) for d, _ in dip])) + [end]
+        # Derin çukur (neredeyse sessizlik) kelime arası olma ihtimali yüksek: ödül; sığ çukur: nötr; çukur yok: ceza
+        def pen_at(x):
+            best = [depth for d, depth in dip if abs(x - d) < 0.03]
+            return -min(0.8, (max(best) - 8) / 20) if best else 0.35
+        pen = [pen_at(x) for x in P]
+        n, INF = len(P), float('inf')
+        dp = [[INF] * n for _ in range(K + 1)]
+        back = [[0] * n for _ in range(K + 1)]
+        dp[0][0] = 0
+        for k in range(1, K + 1):
+            for j in range(1, n):
+                if k == K and j != n - 1:
+                    continue
+                for i in range(j):
+                    if dp[k - 1][i] == INF:
+                        continue
+                    d = P[j] - P[i]
+                    if d < 0.15:                      # kelime 150 ms'den kısa olamaz
+                        continue
+                    c = dp[k - 1][i] + 2.0 * math.log(d / exp[k - 1]) ** 2 + (pen[j] if j != n - 1 else 0)
+                    if c < dp[k][j]:
+                        dp[k][j], back[k][j] = c, i
+        if dp[K][n - 1] < INF:
+            idx, j = [n - 1], n - 1
+            for k in range(K, 0, -1):
+                j = back[k][j]
+                idx.append(j)
+            bounds = [P[i] for i in reversed(idx)]
+            return [[round(bounds[k], 3), round(bounds[k + 1], 3)] for k in range(K)]
+    bounds, t = [start], start
+    for d in exp:
+        t += d
+        bounds.append(t)
+    return [[round(bounds[k], 3), round(bounds[k + 1], 3)] for k in range(K)]
 
 
 def main():
     if len(sys.argv) < 3:
         sys.exit(__doc__)
     no, src = sys.argv[1], pathlib.Path(sys.argv[2])
+    son = float(sys.argv[sys.argv.index('--son') + 1]) if '--son' in sys.argv else None
     if no not in TEXT:
         sys.exit(f'{no} numaralı sure listede yok. Var olanlar: {", ".join(TEXT)}')
     sure = TEXT[no]
@@ -137,7 +182,10 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         wav = pathlib.Path(tmp) / 's.wav'
         # Temizle: mono, baş/son sessizlik kırpılmaz (zamanlama kaymasın), seviye eşitlenir
-        run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(src), '-ac', '1', '-ar', '44100', '-af', 'loudnorm=I=-16:TP=-1.5', str(wav)])
+        af = 'loudnorm=I=-16:TP=-1.5'
+        if son:   # kaydın sonundaki fazlalığı at, kısa bir sönümle bitir
+            af = f'atrim=0:{son},afade=t=out:st={max(0, son - 0.06):.3f}:d=0.06,apad=pad_dur=0.4,' + af
+        run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(src), '-ac', '1', '-ar', '44100', '-af', af, str(wav)])
         # Önce tam olarak Besmele + ayet sayısı kadar parça veren ayarı ara; yoksa Eûzü'lü (+1),
         # en son Besmelesiz (-1) kabul et. Hızlı okumalarda ayetler arası durak kısa olabilir.
         tries = [(d, db, speech_parts(wav, db, d))
@@ -169,9 +217,18 @@ def main():
             segs.append({'s': round(a, 3), 'e': round(b, 3), 'w': word_times(words, a, b, env)})
         out_mp3 = OUT / f'{int(no):03d}.mp3'
         run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(wav), '-c:a', 'libmp3lame', '-b:a', '64k', str(out_mp3)])
+        speeds = {'1': out_mp3.name}
+        for rate in (0.75, 0.5):        # perdeyi koruyarak yavaşlat (rubberband; yoksa atempo)
+            name = f'{int(no):03d}-{int(rate * 100):03d}.mp3'
+            r = run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(wav), '-af', f'rubberband=tempo={rate}:pitchq=quality',
+                     '-c:a', 'libmp3lame', '-b:a', '64k', str(OUT / name)])
+            if r.returncode != 0:
+                run(['ffmpeg', '-y', '-loglevel', 'error', '-i', str(wav), '-af', f'atempo={rate}',
+                     '-c:a', 'libmp3lame', '-b:a', '64k', str(OUT / name)])
+            speeds[str(rate)] = name
     manifest_path = OUT / 'sureler.json'
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
-    manifest[no] = {'dosya': out_mp3.name, 'besmele': besmele, 'satirlar': segs}
+    manifest[no] = {'dosya': out_mp3.name, 'hizlar': speeds, 'besmele': besmele, 'satirlar': segs}
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
     print(f'{sure["ad"]} eklendi: {out_mp3.name}, {len(segs)} satır.')
     for k, s in enumerate(segs):

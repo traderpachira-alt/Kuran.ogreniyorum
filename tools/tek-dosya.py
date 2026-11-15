@@ -26,7 +26,8 @@ sm = root / 'sure' / 'sureler.json'
 if sm.exists():
     import base64, json
     man = json.loads(sm.read_text(encoding='utf-8'))
-    emb = {no: {'b64': base64.b64encode((root / 'sure' / v['dosya']).read_bytes()).decode(), 'timing': v} for no, v in man.items()}
+    b64 = lambda f: base64.b64encode((root / 'sure' / f).read_bytes()).decode()
+    emb = {no: {'sesler': {r: b64(f) for r, f in v.get('hizlar', {'1': v['dosya']}).items()}, 'timing': v} for no, v in man.items()}
     sure_js = '<script>window.KURAN_SURE = ' + json.dumps(emb, ensure_ascii=False) + ';</script>\n'
 page = page.replace('<script src="sureler-veri.js"></script>', sure_js + '<script>\n' + (root / 'sureler-veri.js').read_text(encoding='utf-8') + '</script>')
 page = page.replace('<script src="sureler.js"></script>', '<script>\n' + (root / 'sureler.js').read_text(encoding='utf-8') + '</script>')

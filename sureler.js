@@ -9,7 +9,8 @@
 
 const SURE_SIRA = ['112', '108', '105'];   // çocuklar için kısa olandan uzuna
 const SM = window.SURE_METIN || {};
-const sureSes = {};      // no -> { raw: ArrayBuffer, buf: AudioBuffer|null, timing }
+const sureSes = {};      // no -> { timing, v: { '1' | '0.75' | '0.5': { raw: ArrayBuffer, buf: AudioBuffer|null } } }
+const HIZLAR = ['1', '0.75', '0.5'];
 let sureManifest = null;
 
 const arDigits = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
@@ -21,53 +22,69 @@ async function loadSureAudio() {
       sureManifest = {};
       for (const [no, v] of Object.entries(emb)) {
         sureManifest[no] = v.timing;
-        sureSes[no] = { raw: b64ToBuf(v.b64), buf: null, timing: v.timing };
+        const sesler = v.sesler || { 1: v.b64 };
+        sureSes[no] = { timing: v.timing, v: {} };
+        for (const [r, b64] of Object.entries(sesler)) sureSes[no].v[r] = { raw: b64ToBuf(b64), buf: null };
       }
     } else {
       const r = await fetch('sure/sureler.json');
       if (!r.ok) { sureManifest = {}; return; }
       sureManifest = await r.json();
       await Promise.all(Object.entries(sureManifest).map(async ([no, t]) => {
-        const raw = await (await fetch('sure/' + t.dosya)).arrayBuffer();
-        sureSes[no] = { raw, buf: null, timing: t };
+        sureSes[no] = { timing: t, v: {} };
+        await Promise.all(Object.entries(t.hizlar || { 1: t.dosya }).map(async ([r, f]) => {
+          sureSes[no].v[r] = { raw: await (await fetch('sure/' + f)).arrayBuffer(), buf: null };
+        }));
       }));
     }
-    for (const s of Object.values(sureSes)) { try { s.buf = await decodeAudio(s.raw); } catch (e) { /* <audio> yolu */ } }
+    for (const s of Object.values(sureSes)) {
+      for (const r of HIZLAR) { const x = s.v[r]; if (x) { try { x.buf = await decodeAudio(x.raw); } catch (e) { /* <audio> yolu */ } } }
+    }
   } catch (e) { sureManifest = sureManifest || {}; }
   if (current === 'sureler') renderSureList();
   if (current === 'sure') renderSureControls();
 }
 
 // ---------- Oynatıcı: Web Audio ya da <audio>; konum her an okunabilir ----------
-const SP = { mode: null, src: null, el: null, t0: 0, offset: 0, playing: false, no: null };
+// Yavaş okuma için perdesi korunarak önceden yavaşlatılmış kayıtlar kullanılır.
+// Dışarıya verilen tüm zamanlar asıl kaydın (1x) zamanıdır: konum = çalan kayıttaki konum × hız.
+const SP = { mode: null, src: null, el: null, t0: 0, offset: 0, playing: false, no: null, rate: 1 };
+const sureRate = () => (HIZLAR.includes(String(S.settings.sureHiz)) ? Number(S.settings.sureHiz) : 1);
+function variantOf(no, rate) {
+  const s = sureSes[no];
+  return s && (s.v[String(rate)] || s.v['1']) ? { x: s.v[String(rate)] || s.v['1'], rate: s.v[String(rate)] ? rate : 1 } : null;
+}
 function spPosition() {
   if (!SP.playing) return SP.offset;
-  if (SP.mode === 'media') return SP.el ? SP.el.currentTime : SP.offset;
-  return getCtx().currentTime - SP.t0;
+  const p = SP.mode === 'media' ? (SP.el ? SP.el.currentTime : SP.offset / SP.rate) : getCtx().currentTime - SP.t0;
+  return p * SP.rate;
 }
 function spStopInternal() {
   if (SP.src) { try { SP.src.onended = null; SP.src.stop(); } catch (e) { /* yoksay */ } SP.src = null; }
   if (SP.el) { SP.el.pause(); }
 }
 function spPause() { if (!SP.playing) return; SP.offset = spPosition(); spStopInternal(); SP.playing = false; }
-function spPlayWebAudio(s, from) {
+function spPlayWebAudio(x, from) {
   const c = getCtx();
   if (c.state !== 'running') c.resume().catch(() => {});
   const src = c.createBufferSource();
-  src.buffer = s.buf; src.connect(c.destination);
+  src.buffer = x.buf; src.connect(c.destination);
   src.start(0, Math.max(0, from));
   SP.src = src; SP.mode = 'webaudio'; SP.t0 = c.currentTime - from; SP.playing = true;
 }
-function spPlay(no, from) {
-  const s = sureSes[no];
-  if (!s) return;
+/** fromOrig: asıl kayıttaki saniye. */
+function spPlay(no, fromOrig) {
+  const vr = variantOf(no, sureRate());
+  if (!vr) return;
   hush(); spStopInternal();
-  SP.no = no; SP.offset = from;
-  const useMedia = IS_IOS || !s.buf;     // iPhone'da sessiz modda da çalsın; çözülemeyen biçimde de
-  if (!useMedia) return spPlayWebAudio(s, from);
-  if (!SP.el || SP.el._no !== no) {
-    SP.el = new Audio(URL.createObjectURL(new Blob([s.raw], { type: 'audio/mpeg' })));
-    SP.el._no = no;
+  const { x, rate } = vr;
+  SP.no = no; SP.rate = rate; SP.offset = fromOrig;
+  const from = fromOrig / rate;
+  const useMedia = IS_IOS || !x.buf;     // iPhone'da sessiz modda da çalsın; çözülemeyen biçimde de
+  if (!useMedia) return spPlayWebAudio(x, from);
+  if (!SP.el || SP.el._x !== x) {
+    SP.el = new Audio(URL.createObjectURL(new Blob([x.raw], { type: 'audio/mpeg' })));
+    SP.el._x = x;
   }
   const el = SP.el;
   SP.mode = 'media'; SP.playing = true;
@@ -75,9 +92,14 @@ function spPlay(no, from) {
   let started = false;
   el.onplaying = () => { started = true; };
   const p = el.play();
-  const fallback = () => { if (started || SP.el !== el || SP.mode !== 'media') return; el.pause(); if (s.buf) spPlayWebAudio(s, from); else SP.playing = false; };
+  const fallback = () => { if (started || SP.el !== el || SP.mode !== 'media') return; el.pause(); if (x.buf) spPlayWebAudio(x, from); else SP.playing = false; };
   if (p && p.catch) p.catch(fallback);
   setTimeout(fallback, 1500);
+}
+function setSureRate(r) {
+  S.settings.sureHiz = r; save(); sfx.flip();
+  if (SP.playing && SP.no === SR.no) { const t = spPosition(); spPlay(SR.no, t); }
+  renderSureControls();
 }
 
 // ---------- Liste ----------
@@ -143,6 +165,7 @@ function renderSureControls() {
   ['surePlay', 'sureRestart'].forEach(id => { $(id).disabled = !has; });
   $('surePlay').textContent = SP.playing && SP.no === SR.no ? '⏸' : '▶';
   $('sureMode').classList.toggle('on', SR.mode === 'birlikte');
+  document.querySelectorAll('.hiz').forEach(b => b.classList.toggle('on', Number(b.dataset.hiz) === sureRate()));
 }
 function segOf(li) { return SR.timing && SR.timing.satirlar[li]; }
 
@@ -193,7 +216,7 @@ function sureLoop() {
         spPause();
         if (li + 1 < segs.length) {
           SR.nextFrom = segs[li + 1].s - 0.05;
-          SR.waitUntil = now + ((segs[li].e - segs[li].s) * 1000 + 1200);
+          SR.waitUntil = now + ((segs[li].e - segs[li].s) / SP.rate * 1000 + 1200);
           $('sureYourTurn').hidden = false;
         } else sureFinished();
       }
@@ -253,4 +276,5 @@ $('sureMode').onclick = () => { SR.mode = SR.mode === 'birlikte' ? 'surekli' : '
   hush(); speak(SR.mode === 'birlikte' ? 'Hoca okusun, sonra sen tekrar et!' : 'Sure baştan sona okunacak.', 'tr'); };
 $('sureOkunus').onchange = e => { S.settings.okunus = e.target.checked; save(); $('sureText').classList.toggle('no-ok', !e.target.checked); };
 $('sureBack').onclick = () => openSureler();
+document.querySelectorAll('.hiz').forEach(b => { b.onclick = () => setSureRate(b.dataset.hiz); });
 loadSureAudio();

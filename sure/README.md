@@ -16,10 +16,12 @@ Her sure için hocanın kaydı ve kelime kelime zamanlaması burada durur:
     python3 tools/sure-ekle.py 108 kevser.m4a
     python3 tools/sure-ekle.py 105 fil.m4a
 
-Araç ayet sınırlarını sessizliklerden kesin olarak bulur. Ayet içindeki kelime zamanları harf
-sayısına ve uzatmalara göre tahmin edilir; uzun meddlerde vurgu birkaç yüz milisaniye önde
-ya da geride kalabilir.
+Araç ayet sınırlarını sessizliklerden bulur. Ayet içindeki kelime sınırları, kayıttaki ses çukurlarından
+harf sayısına (uzatmalar daha uzun) en uygun düşenler seçilerek bulunur; çukur yoksa orantılı bölünür.
+Ayrıca perdesi korunarak 0.75 ve 0.5 hızında yavaş sürümler üretilir (rubberband).
+Sondaki fazlalığı atmak için `--son <saniye>` verilir.
 
 ## Şu anki kayıtlar
 
-- `112.mp3` İhlâs: kullanıcının sağladığı "çocuk ezber" kaydı; Besmele + 4 ayet, sessizliklerden ayrıldı.
+- `112.mp3` İhlâs: kullanıcının sağladığı "çocuk ezber" kaydı; Besmele + 4 ayet. Sondaki gülme sesi atıldı:
+  `python3 tools/sure-ekle.py 112 ihlas.mp3 --son 12.68`. `112-075.mp3` ve `112-050.mp3` yavaş sürümler.
