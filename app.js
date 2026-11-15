@@ -39,7 +39,7 @@ const LETTERS = [
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '8 (15.11.2026)';
+const VERSION = '9 (15.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -180,8 +180,14 @@ function sayLetter(i) {
 function praise() { const p = rand(PRAISE); speak(withName(p, 0.6), 'tr'); return p; }
 
 // ---------- Çocuğun adı ----------
-// Ad, Türkçe ek gerektirmeyecek şekilde hitap olarak eklenir: "Aferin!" -> "Aferin, Ayşe!"
+// Ad, Türkçe ek gerektirmeyecek şekilde hitap olarak eklenir.
+// Övgülerde sona: "Aferin!" -> "Aferin, Ayşe!"; yönergelerde başa: "Bul bakalım!" -> "Ayşe, bul bakalım!"
 const childName = () => (S.settings.childName || '').trim();
+function nameFirst(text, chance = 1) {
+  const n = childName();
+  if (!n || Math.random() > chance) return text;
+  return `${n}, ${text[0].toLocaleLowerCase('tr')}${text.slice(1)}`;
+}
 function withName(text, chance = 1) {
   const n = childName();
   if (!n || Math.random() > chance) return text;
@@ -339,7 +345,7 @@ function nextFind() {
   fg.locked = false; fg.missThis = false;
   promptFind();
 }
-async function promptFind() { hush(); await speak(withName('Bul bakalım!', 0.5), 'tr'); if (current === 'find') sayLetter(fg.target); }
+async function promptFind() { hush(); await speak(nameFirst('Bul bakalım!', 0.5), 'tr'); if (current === 'find') sayLetter(fg.target); }
 $('fSpeak').onclick = () => { hush(); sayLetter(fg.target); };
 function pickFind(btn, i) {
   if (fg.locked) return;
@@ -509,7 +515,7 @@ function startBalloon() {
   $('bTarget').textContent = LETTERS[bg.target].c;
   $('bTarget').style.color = $('bTarget').style.borderColor = colorOf(bg.target);
   renderDots($('bDots'), BALLOON_GOAL, 0);
-  (async () => { hush(); await speak(withName('Bu harfi patlat!', 0.5), 'tr'); if (current === 'balloon') sayLetter(bg.target); })();
+  (async () => { hush(); await speak(nameFirst('Bu harfi patlat!', 0.5), 'tr'); if (current === 'balloon') sayLetter(bg.target); })();
   bg.raf = requestAnimationFrame(balloonLoop);
 }
 function stopBalloon() { cancelAnimationFrame(bg.raf); bg.raf = 0; }
@@ -578,7 +584,7 @@ function startMemory() {
     c.onclick = () => flipCard(c);
     grid.appendChild(c);
   });
-  speak(withName('Aynı harfleri bul!', 0.6), 'tr');
+  speak(nameFirst('Aynı harfleri bul!', 0.6), 'tr');
 }
 function flipCard(c) {
   if (mg.locked || c.classList.contains('open') || c.classList.contains('match')) return;
@@ -712,7 +718,7 @@ function buy(it, btn) {
   }
   if (S.stars < it.p) {
     replayAnim(btn, 'nope'); sfx.no();
-    hush(); speak(withName(`${it.p - S.stars} yıldız daha topla!`, 0.5), 'tr');
+    hush(); speak(nameFirst(`${it.p - S.stars} yıldız daha topla!`, 0.5), 'tr');
     return;
   }
   S.stars -= it.p; S.spent = (S.spent || 0) + it.p;
@@ -971,7 +977,7 @@ $('rHome').onclick = () => show('home');
 $('rAgain').onclick = () => { $('reward').hidden = true; if (replay) replay(); };
 $('mascot').onclick = () => {
   replayAnim($('bubble'), 'pop');
-  const lines = [withName('Selam!') + ' Ben Hilal. Hadi harfleri öğrenelim!', withName('Bugün yeni bir harf öğrenelim mi?', 0.6), withName('Yıldız toplamaya hazır mısın?', 0.6)];
+  const lines = [withName('Selam!') + ' Ben Hilal. Hadi harfleri öğrenelim!', nameFirst('Bugün yeni bir harf öğrenelim mi?', 0.6), nameFirst('Yıldız toplamaya hazır mısın?', 0.6)];
   const line = rand(lines);
   $('bubble').innerHTML = esc(line).replace('Hilal', '<b>Hilal</b>').replace('! ', '!<br>');
   hush(); speak(line, 'tr');

@@ -20,7 +20,7 @@ Herhangi bir statik barındırma servisine (GitHub Pages, Netlify vb.) olduğu g
 - **Kısa oturumlar:** Her oyun 1–2 dakikada biter ve bir ödül ekranıyla kapanır.
 - **Hak edilen yıldız:** Oyun sonunda hata sayısına göre 1–3 yıldız verilir (Dinle ve Bul ile Balon Patlat'ta hatasız 3, 1–2 hatada 2, daha fazlasında 1; Hafıza Kartları'nda çift sayısı kadar yanlış eşleşmeye kadar 3). Dinle ve Bul'da tur yıldızı ve harfin "biliyor" puanı yalnızca ilk denemede doğru bilinince verilir. Yıldız hiçbir zaman geri alınmaz.
 - **Adım adım ilerleme:** Oyunlar, çocuğun *Harfleri Tanı* bölümünde gördüğü harflerle oynanır (en az 4 harf). Böylece yeni harfler zorlamadan, sırayla eklenir.
-- **Çocuğa adıyla seslenme:** Anne-Baba bölümüne çocuğun adı yazılırsa Hilal övgü ve yönergelerde ona adıyla seslenir ("Aferin, Ayşe!", "Bul bakalım, Ayşe!"). Ad, Türkçe ek gerektirmeyecek şekilde hitap olarak eklenir; tekdüze olmasın diye bazı cümlelerde kullanılır. Ad yalnızca o cihazda saklanır.
+- **Çocuğa adıyla seslenme:** Anne-Baba bölümüne çocuğun adı yazılırsa Hilal övgü ve yönergelerde ona adıyla seslenir (övgülerde "Aferin, Ayşe!", yönergelerde "Ayşe, bul bakalım!"). Ad, Türkçe ek gerektirmeyecek şekilde hitap olarak eklenir; tekdüze olmasın diye bazı cümlelerde kullanılır. Ad yalnızca o cihazda saklanır.
 - **Ebeveyn kilidi:** Ayarlar, basit bir toplama sorusunun arkasındadır.
 
 ## Bölümler
