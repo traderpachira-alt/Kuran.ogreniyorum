@@ -42,7 +42,7 @@ LETTERS.forEach(L => { L.ar = L.c + FATHA; L.cf = L.c + FATHA; });   // üstünl
 const COLORS = ['#ff6b6b', '#f76707', '#f59f00', '#37b24d', '#0ca678', '#1c7ed6', '#4c6ef5', '#ae3ec9', '#e64980'];
 const colorOf = i => COLORS[i % COLORS.length];
 const PRAISE = ['Aferin!', 'Harika!', 'Süpersin!', 'Maşallah!', 'Çok güzel!', 'Bravo!'];
-const VERSION = '23 (15.11.2026)';
+const VERSION = '24 (17.11.2026)';
 const MASTERED = 3; // bir harf kaç doğru cevapta "çiçek açar"
 
 // ---------- Yardımcılar ----------
@@ -732,13 +732,13 @@ $('bTarget').onclick = () => { hush(); sayLetter(bg.target); };
 const mg = { open: [], matched: 0, pairs: 3, locked: false };
 function startMemory() {
   show('memory');
-  const p = pool();
-  mg.pairs = p.length >= 8 ? 4 : 3;
+  mg.pairs = 6;                                   // 12 kart
   mg.open = []; mg.matched = 0; mg.locked = false; mg.miss = 0;
-  const chosen = sample(p, mg.pairs);
+  let chosen = sample(pool(), mg.pairs);
+  for (let k = 0; chosen.length < mg.pairs; k++) if (!chosen.includes(k)) chosen.push(k);   // az harf görüldüyse sıradakilerle tamamla
   const deck = shuffle([...chosen, ...chosen]);
   const grid = $('mGrid');
-  grid.className = 'cards' + (mg.pairs === 4 ? ' four' : '');
+  grid.className = 'cards four';
   grid.innerHTML = '';
   deck.forEach(i => {
     const c = document.createElement('button');
@@ -808,7 +808,13 @@ const SHOP = [
   { id: 'tree', e: '🌳', p: 6, ad: 'Ağaç' }, { id: 'sheep', e: '🐑', p: 6, ad: 'Kuzu' },
   { id: 'camel', e: '🐪', p: 8, ad: 'Deve' }, { id: 'rainbow', e: '🌈', p: 8, ad: 'Gökkuşağı' },
   { id: 'house', e: '🏡', p: 10, ad: 'Ev' }, { id: 'mosque', e: '🕌', p: 12, ad: 'Cami' },
+  { id: 'snail', e: '🐌', p: 2, ad: 'Salyangoz' }, { id: 'mushroom', e: '🍄', p: 2, ad: 'Mantar' },
+  { id: 'frog', e: '🐸', p: 3, ad: 'Kurbağa' }, { id: 'bee', e: '🐝', p: 3, ad: 'Arı' },
+  { id: 'dog', e: '🐶', p: 5, ad: 'Köpek' }, { id: 'penguin', e: '🐧', p: 5, ad: 'Penguen' },
+  { id: 'cow', e: '🐮', p: 6, ad: 'İnek' }, { id: 'pond', e: '🐟', p: 7, ad: 'Balıklı gölet' },
+  { id: 'giraffe', e: '🦒', p: 8, ad: 'Zürafa' }, { id: 'elephant', e: '🐘', p: 10, ad: 'Fil' },
 ];
+SHOP.sort((x, y) => x.p - y.p);
 // Eski çıkartmaları (emoji) yeni bahçe öğelerine çevir
 const OLD_STICKERS = { '☁️': 'cloud', '🐥': 'chick', '🐞': 'bug', '🌸': 'flower', '🍎': 'flower', '🍓': 'flower', '🦋': 'butterfly',
   '🎈': 'balloon', '🐢': 'turtle', '🐟': 'duck', '🐰': 'bunny', '🐱': 'cat', '🌻': 'sunflower', '🌳': 'tree', '🐑': 'sheep',
